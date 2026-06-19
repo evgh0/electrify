@@ -45,6 +45,14 @@ internal sealed class TransientSimulationStepper
 
     public double CurrentTime => Volatile.Read(ref _currentTime);
 
+    public bool GetSwitchState(Model.ComponentId componentId) => _state.GetSwitchState(componentId);
+
+    public bool TryGetSwitchState(Model.ComponentId componentId, out bool isClosed) =>
+        _state.TryGetSwitchState(componentId, out isClosed);
+
+    public void SetSwitchState(Model.ComponentId componentId, bool isClosed) =>
+        _state.SetSwitchState(componentId, isClosed);
+
     public TransientSample Advance(double timeStep, CancellationToken cancellationToken)
     {
         if (!Guard.IsFinite(timeStep) || timeStep <= 0.0)
@@ -60,7 +68,8 @@ internal sealed class TransientSimulationStepper
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        var solution = Solve(targetTime, timeStep, cancellationToken);
+        var switchStates = _state.CaptureSwitchStates();
+        var solution = Solve(targetTime, timeStep, switchStates, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         var sample = new TransientSample(_circuit, targetTime, timeStep, _state, solution);
         cancellationToken.ThrowIfCancellationRequested();
@@ -70,12 +79,16 @@ internal sealed class TransientSimulationStepper
         return sample;
     }
 
-    private double[] Solve(double targetTime, double timeStep, CancellationToken cancellationToken)
+    private double[] Solve(
+        double targetTime,
+        double timeStep,
+        IReadOnlyDictionary<Model.ComponentId, bool> switchStates,
+        CancellationToken cancellationToken)
     {
         if (_nonlinearSolver is null)
         {
             var system = _assembler.AssembleTransient(
-                new TransientStampContext(_circuit, _state, targetTime, timeStep));
+                new TransientStampContext(_circuit, _state, targetTime, timeStep, switchStates));
             return _linearSystemSolver.Solve(system);
         }
 
@@ -84,7 +97,7 @@ internal sealed class TransientSimulationStepper
             return _nonlinearSolver.Solve(
                 _circuit.VariableMap,
                 estimate => _assembler.AssembleTransient(
-                    new TransientStampContext(_circuit, _state, targetTime, timeStep, estimate)),
+                    new TransientStampContext(_circuit, _state, targetTime, timeStep, switchStates, estimate)),
                 _previousSolution,
                 _newtonOptions,
                 (current, candidate) => NonlinearCircuitUtilities.LimitDiodeVoltageStep(

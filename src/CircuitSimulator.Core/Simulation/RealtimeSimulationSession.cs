@@ -91,6 +91,20 @@ public sealed class RealtimeSimulationSession
     /// <summary>Gets the latest committed sample, or <see langword="null"/> before the first step.</summary>
     public TransientSample? LatestSample => Volatile.Read(ref _latestSample);
 
+    /// <summary>Gets the current control state of an ideal switch.</summary>
+    public bool GetSwitchState(ComponentId componentId) => _stepper.GetSwitchState(componentId);
+
+    /// <summary>Attempts to get the current control state of an ideal switch.</summary>
+    public bool TryGetSwitchState(ComponentId componentId, out bool isClosed) =>
+        _stepper.TryGetSwitchState(componentId, out isClosed);
+
+    /// <summary>
+    /// Changes an ideal switch state for the next numerical step without resetting time or committed history.
+    /// </summary>
+    /// <remarks>This method is thread-safe and may be called while <see cref="RunAsync"/> is active.</remarks>
+    public void SetSwitchState(ComponentId componentId, bool isClosed) =>
+        _stepper.SetSwitchState(componentId, isClosed);
+
     /// <summary>
     /// Immediately advances exactly one fixed integration step without wall-clock pacing.
     /// </summary>

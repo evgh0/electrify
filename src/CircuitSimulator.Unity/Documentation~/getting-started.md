@@ -14,10 +14,12 @@ The manager factory methods create a device GameObject and both terminals. `Conn
 var source = simulation.AddSinusoidalVoltageSource("V1", 0, 5, 50);
 var resistor = simulation.AddResistor("R1", 1000);
 var capacitor = simulation.AddCapacitor("C1", 100e-6);
+var circuitSwitch = simulation.AddSwitch("S1", initiallyClosed: true);
 
 simulation.Connect(source.Negative, capacitor.Negative);
 simulation.SetGround(source.Negative);
-simulation.Connect(source.Positive, resistor.Positive);
+simulation.Connect(source.Positive, circuitSwitch.Positive);
+simulation.Connect(circuitSwitch.Negative, resistor.Positive);
 simulation.Connect(resistor.Negative, capacitor.Positive);
 ```
 
@@ -29,10 +31,18 @@ The default timestep is 1 ms and the default frame limit is 32 numerical steps. 
 
 Every device exposes `LatestReading`, `HasReading`, `Voltage`, `Current`, `Power`, and `ReadingChanged`. Before the first accepted sample, convenience values are zero and `HasReading` is false. Power uses the passive sign convention, so positive power is absorbed and negative power is delivered.
 
+## Switches and buttons
+
+`CircuitSwitch` is a latched ideal contact with `Open`, `Close`, and `Toggle`. `CircuitButton` is momentary and exposes `Press` and `Release`; its unpressed state is normally open unless `NormallyClosed` is enabled.
+
+Contact changes are sampled once at the start of the next numerical step. They do not rebuild the circuit, reset time or source phase, discard capacitor/inductor history, clear readings, or remove accumulated frame time. A closed contact has exactly zero voltage and an open contact has exactly zero current.
+
+Opening an ideal contact can leave a floating circuit and produce a singular solve. The failed step is transactional: the latest reading, time, and reactive history remain unchanged. Correcting the contact state permits the same session to continue.
+
 ## Editing and deletion
 
 Changing device properties, terminals, wires, ground flags, hierarchy, or enabled state schedules a rebuild before the next step. A rebuild resets time, waveform phase, capacitor/inductor history, accumulated frame time, and readings.
 
 `DeleteComponent` destroys the device GameObject and every `CircuitConnection` touching its terminals. `DeleteWire` removes one ideal wire. Editor commands use Unity Undo; runtime deletion uses `Object.Destroy`.
 
-`CircuitConnection.IsConducting` is the extension point for future switch and button behaviours. A derived connection calls `NotifyConductivityChanged` whenever its conducting state changes.
+`CircuitConnection` represents static topology such as ideal wires. Controllable contacts are simulated components so their state can change without recompiling terminal-to-node topology.

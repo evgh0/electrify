@@ -65,7 +65,7 @@ public sealed class TransientSample
             ? current
             : throw new KeyNotFoundException($"No current result exists for component {componentId}.");
 
-    /// <summary>Gets a solved voltage-source or inductor branch current.</summary>
+    /// <summary>Gets a solved voltage-source, inductor, or switch branch current.</summary>
     public double GetBranchCurrent(ComponentId componentId)
     {
         var index = CompiledCircuit.VariableMap.GetBranchCurrentIndex(componentId);
@@ -88,6 +88,7 @@ public sealed class TransientSample
                     (voltage - committedState.GetCapacitorState(component.ComponentId).PreviousVoltage),
                 InductorParameters => GetBranchCurrent(component.ComponentId),
                 DiodeParameters diode => DiodeModel.Evaluate(diode, voltage).Current,
+                SwitchParameters => GetBranchCurrent(component.ComponentId),
                 _ => throw new SimulationException(
                     $"Component '{component.Name}' ({component.ComponentId}) has unsupported parameters.")
             };

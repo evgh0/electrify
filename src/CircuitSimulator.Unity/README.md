@@ -18,10 +18,12 @@ The consuming project must use Unity 6000.0 or later and the .NET Standard 2.1 A
 var simulation = gameObject.AddComponent<CircuitSimulation>();
 var source = simulation.AddVoltageSource("V1", 5.0);
 var resistor = simulation.AddResistor("R1", 1_000.0);
+var circuitSwitch = simulation.AddSwitch("S1", initiallyClosed: true);
 
 simulation.SetGround(source.Negative);
 simulation.Connect(source.Negative, resistor.Negative);
-simulation.Connect(source.Positive, resistor.Positive);
+simulation.Connect(source.Positive, circuitSwitch.Positive);
+simulation.Connect(circuitSwitch.Negative, resistor.Positive);
 
 resistor.ReadingChanged += reading => Debug.Log(reading.Power);
 simulation.StartSimulation();
@@ -30,5 +32,7 @@ simulation.StartSimulation();
 Inspector-authored devices register with the nearest enabled `CircuitSimulation` in their parent hierarchy. Every two-terminal device uses terminal 0 as positive/reference and terminal 1 as negative. Positive current flows from positive to negative.
 
 Runtime parameter, wiring, enable-state, hierarchy, and deletion changes mark the circuit dirty. The next numerical step rebuilds the Core circuit, resets simulation time and reactive history, and clears existing readings.
+
+`CircuitSwitch.Open`, `Close`, and `Toggle`, plus `CircuitButton.Press` and `Release`, are live control operations. They apply on the next numerical step without rebuilding or clearing state. Buttons are normally open by default and can be configured as normally closed.
 
 See `Documentation~/getting-started.md` and the Realtime RC sample for the full lifecycle and failure behavior.

@@ -38,7 +38,7 @@ namespace CircuitSimulator.Unity
         private readonly Dictionary<CircuitComponent, ComponentId> componentIds =
             new Dictionary<CircuitComponent, ComponentId>();
         private RealtimeSimulationSession session;
-        private IReadOnlyList<CircuitValidationIssue> validationIssues = Array.Empty<CircuitValidationIssue>();
+        private IReadOnlyList<CircuitDiagnostic> validationIssues = Array.Empty<CircuitDiagnostic>();
         private CircuitSimulationFailure lastFailure;
         private CircuitSimulationState state = CircuitSimulationState.Uninitialized;
         private bool isDirty = true;
@@ -100,7 +100,7 @@ namespace CircuitSimulator.Unity
         public CircuitSimulationFailure LastFailure => lastFailure;
 
         /// <summary>Gets validation warnings or errors produced by the latest rebuild.</summary>
-        public IReadOnlyList<CircuitValidationIssue> ValidationIssues => validationIssues;
+        public IReadOnlyList<CircuitDiagnostic> ValidationIssues => validationIssues;
 
         /// <summary>Gets the latest committed simulation time, or zero without a session.</summary>
         public double CurrentTime => session?.CurrentTime ?? 0.0;
@@ -228,7 +228,7 @@ namespace CircuitSimulator.Unity
             accumulator = 0.0;
             session = null;
             componentIds.Clear();
-            validationIssues = Array.Empty<CircuitValidationIssue>();
+            validationIssues = Array.Empty<CircuitDiagnostic>();
             lastFailure = null;
 
             try
@@ -243,16 +243,17 @@ namespace CircuitSimulator.Unity
                     componentIds.Add(pair.Key, pair.Value);
                 }
 
-                validationIssues = build.CompiledCircuit.ValidationReport.Issues;
+                validationIssues = MapValidationIssues(build.CompiledCircuit.ValidationReport.Issues);
                 isDirty = false;
                 SetState(wantsToRun ? CircuitSimulationState.Running : CircuitSimulationState.Paused);
                 return true;
             }
             catch (Exception exception)
             {
-                var issues = exception is CircuitCompilationException compilationException
+                var coreIssues = exception is CircuitCompilationException compilationException
                     ? compilationException.ValidationReport.Issues
                     : Array.Empty<CircuitValidationIssue>();
+                var issues = MapValidationIssues(coreIssues);
                 validationIssues = issues;
                 lastFailure = new CircuitSimulationFailure(exception, issues);
                 isDirty = false;
@@ -291,6 +292,22 @@ namespace CircuitSimulator.Unity
         public Diode AddDiode(string name)
         {
             return CreateComponent<Diode>(name);
+        }
+
+        /// <summary>Creates and registers a latched ideal switch.</summary>
+        public CircuitSwitch AddSwitch(string name, bool initiallyClosed = false)
+        {
+            var circuitSwitch = CreateComponent<CircuitSwitch>(name);
+            circuitSwitch.IsClosed = initiallyClosed;
+            return circuitSwitch;
+        }
+
+        /// <summary>Creates and registers a momentary ideal button.</summary>
+        public CircuitButton AddButton(string name, bool normallyClosed = false)
+        {
+            var button = CreateComponent<CircuitButton>(name);
+            button.NormallyClosed = normallyClosed;
+            return button;
         }
 
         /// <summary>Creates and registers a constant voltage source.</summary>
@@ -454,6 +471,9 @@ namespace CircuitSimulator.Unity
                     }
                 }
 
+                lastFailure = null;
+                SetState(wantsToRun ? CircuitSimulationState.Running : CircuitSimulationState.Paused);
+
                 return true;
             }
             catch (Exception exception)
@@ -463,6 +483,27 @@ namespace CircuitSimulator.Unity
                 SimulationFailed?.Invoke(lastFailure);
                 Debug.LogError("Circuit simulation step failed: " + exception.Message, this);
                 return false;
+            }
+        }
+
+        internal void SetSwitchState(ControlledSwitchComponent component, bool isClosed)
+        {
+            if (component == null)
+            {
+                throw new ArgumentNullException(nameof(component));
+            }
+
+            ComponentId componentId;
+            if (session == null || isDirty || !componentIds.TryGetValue(component, out componentId))
+            {
+                RequestRebuild();
+                return;
+            }
+
+            session.SetSwitchState(componentId, isClosed);
+            if (state == CircuitSimulationState.Faulted)
+            {
+                SetState(wantsToRun ? CircuitSimulationState.Running : CircuitSimulationState.Paused);
             }
         }
 
@@ -670,6 +711,29 @@ namespace CircuitSimulator.Unity
         private static CircuitValidationIssue CreateAuthoringIssue(string code, string message)
         {
             return new CircuitValidationIssue(code, ValidationSeverity.Error, message);
+        }
+
+        private static IReadOnlyList<CircuitDiagnostic> MapValidationIssues(
+            IReadOnlyList<CircuitValidationIssue> coreIssues)
+        {
+            if (coreIssues.Count == 0)
+            {
+                return Array.Empty<CircuitDiagnostic>();
+            }
+
+            var mapped = new CircuitDiagnostic[coreIssues.Count];
+            for (var index = 0; index < coreIssues.Count; index++)
+            {
+                var issue = coreIssues[index];
+                mapped[index] = new CircuitDiagnostic(
+                    issue.Code,
+                    issue.Severity == ValidationSeverity.Error
+                        ? CircuitDiagnosticSeverity.Error
+                        : CircuitDiagnosticSeverity.Warning,
+                    issue.Message);
+            }
+
+            return new ReadOnlyCollection<CircuitDiagnostic>(mapped);
         }
 
         private static string GetHierarchyKey(CircuitElement element)

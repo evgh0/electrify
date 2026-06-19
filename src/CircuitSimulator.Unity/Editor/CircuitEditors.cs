@@ -50,7 +50,7 @@ namespace CircuitSimulator.Unity.Editor
 
             foreach (var issue in simulation.ValidationIssues)
             {
-                var messageType = issue.Severity == CircuitSimulator.Core.Validation.ValidationSeverity.Error
+                var messageType = issue.Severity == CircuitDiagnosticSeverity.Error
                     ? MessageType.Error
                     : MessageType.Warning;
                 EditorGUILayout.HelpBox(issue.Code + ": " + issue.Message, messageType);
@@ -69,12 +69,10 @@ namespace CircuitSimulator.Unity.Editor
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+            var component = (CircuitComponent)target;
             var source = target as IndependentSource;
-            if (source == null)
-            {
-                DrawDefaultInspector();
-            }
-            else
+            var controlled = target as ControlledSwitchComponent;
+            if (source != null)
             {
                 DrawPropertiesExcluding(
                     serializedObject,
@@ -101,8 +99,17 @@ namespace CircuitSimulator.Unity.Editor
 
                 serializedObject.ApplyModifiedProperties();
             }
+            else if (controlled != null)
+            {
+                DrawPropertiesExcluding(serializedObject, "m_Script", "isClosed", "normallyClosed");
+                serializedObject.ApplyModifiedProperties();
+                DrawSwitchControls(controlled);
+            }
+            else
+            {
+                DrawDefaultInspector();
+            }
 
-            var component = (CircuitComponent)target;
             var twoTerminal = component as TwoTerminalCircuitComponent;
             if (twoTerminal != null && (twoTerminal.Positive == null || twoTerminal.Negative == null))
             {
@@ -133,6 +140,60 @@ namespace CircuitSimulator.Unity.Editor
                 {
                     DeleteComponentWithUndo(twoTerminal);
                     GUIUtility.ExitGUI();
+                }
+            }
+        }
+
+        private static void DrawSwitchControls(ControlledSwitchComponent controlled)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Ideal Contact", EditorStyles.boldLabel);
+
+            var circuitSwitch = controlled as CircuitSwitch;
+            if (circuitSwitch != null)
+            {
+                var isClosed = EditorGUILayout.Toggle("Closed", circuitSwitch.IsClosed);
+                if (isClosed != circuitSwitch.IsClosed)
+                {
+                    Undo.RecordObject(circuitSwitch, "Change Circuit Switch State");
+                    circuitSwitch.IsClosed = isClosed;
+                    EditorUtility.SetDirty(circuitSwitch);
+                }
+
+                if (GUILayout.Button(circuitSwitch.IsClosed ? "Open" : "Close"))
+                {
+                    Undo.RecordObject(circuitSwitch, "Toggle Circuit Switch");
+                    circuitSwitch.Toggle();
+                    EditorUtility.SetDirty(circuitSwitch);
+                }
+
+                return;
+            }
+
+            var button = controlled as CircuitButton;
+            if (button == null)
+            {
+                return;
+            }
+
+            var normallyClosed = EditorGUILayout.Toggle("Normally Closed", button.NormallyClosed);
+            if (normallyClosed != button.NormallyClosed)
+            {
+                Undo.RecordObject(button, "Change Circuit Button Contact");
+                button.NormallyClosed = normallyClosed;
+                EditorUtility.SetDirty(button);
+            }
+
+            EditorGUILayout.LabelField("Pressed", button.IsPressed ? "Yes" : "No");
+            if (GUILayout.Button(button.IsPressed ? "Release" : "Press"))
+            {
+                if (button.IsPressed)
+                {
+                    button.Release();
+                }
+                else
+                {
+                    button.Press();
                 }
             }
         }
@@ -233,6 +294,33 @@ namespace CircuitSimulator.Unity.Editor
 
             Gizmos.color = wire.Simulation == null ? Color.red : new Color(0.75f, 0.8f, 0.9f);
             Gizmos.DrawLine(wire.First.transform.position, wire.Second.transform.position);
+        }
+
+        [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected | GizmoType.Pickable)]
+        private static void DrawControlledSwitch(ControlledSwitchComponent controlled, GizmoType gizmoType)
+        {
+            if (controlled == null || controlled.Positive == null || controlled.Negative == null)
+            {
+                return;
+            }
+
+            var positive = controlled.Positive.transform.position;
+            var negative = controlled.Negative.transform.position;
+            var delta = negative - positive;
+            var firstContact = positive + delta * 0.25f;
+            var secondContact = positive + delta * 0.75f;
+            Gizmos.color = controlled.IsElectricallyClosed
+                ? new Color(0.2f, 0.9f, 0.35f)
+                : new Color(1.0f, 0.45f, 0.2f);
+            Gizmos.DrawLine(positive, firstContact);
+            Gizmos.DrawLine(secondContact, negative);
+            Gizmos.DrawSphere(firstContact, 0.035f);
+            Gizmos.DrawSphere(secondContact, 0.035f);
+            Gizmos.DrawLine(
+                firstContact,
+                controlled.IsElectricallyClosed
+                    ? secondContact
+                    : Vector3.Lerp(firstContact, secondContact, 0.85f) + Vector3.up * 0.12f);
         }
     }
 }

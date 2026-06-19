@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using CircuitSimulator.Core.Validation;
 
 namespace CircuitSimulator.Unity
 {
@@ -18,16 +17,51 @@ namespace CircuitSimulator.Unity
         Faulted
     }
 
+    /// <summary>Severity of a Unity-facing circuit diagnostic.</summary>
+    public enum CircuitDiagnosticSeverity
+    {
+        /// <summary>The circuit can run, but the condition should be reviewed.</summary>
+        Warning,
+        /// <summary>The circuit cannot be compiled or simulated.</summary>
+        Error
+    }
+
+    /// <summary>A structured circuit diagnostic that does not expose Core implementation types.</summary>
+    public sealed class CircuitDiagnostic
+    {
+        /// <summary>Creates an immutable diagnostic.</summary>
+        public CircuitDiagnostic(string code, CircuitDiagnosticSeverity severity, string message)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                throw new ArgumentException("Diagnostic code cannot be null or whitespace.", nameof(code));
+            }
+
+            Code = code;
+            Severity = severity;
+            Message = message ?? throw new ArgumentNullException(nameof(message));
+        }
+
+        /// <summary>Gets the stable diagnostic code.</summary>
+        public string Code { get; }
+
+        /// <summary>Gets whether this is a warning or error.</summary>
+        public CircuitDiagnosticSeverity Severity { get; }
+
+        /// <summary>Gets the user-facing diagnostic message.</summary>
+        public string Message { get; }
+    }
+
     /// <summary>Describes a caught compilation or simulation failure without exposing MNA details.</summary>
     public sealed class CircuitSimulationFailure
     {
         /// <summary>Creates an immutable failure snapshot.</summary>
-        public CircuitSimulationFailure(Exception exception, IEnumerable<CircuitValidationIssue> validationIssues)
+        public CircuitSimulationFailure(Exception exception, IEnumerable<CircuitDiagnostic> validationIssues)
         {
             Exception = exception ?? throw new ArgumentNullException(nameof(exception));
             Message = exception.Message;
-            ValidationIssues = new ReadOnlyCollection<CircuitValidationIssue>(
-                new List<CircuitValidationIssue>(validationIssues ?? Array.Empty<CircuitValidationIssue>()));
+            ValidationIssues = new ReadOnlyCollection<CircuitDiagnostic>(
+                new List<CircuitDiagnostic>(validationIssues ?? Array.Empty<CircuitDiagnostic>()));
         }
 
         /// <summary>Gets a user-facing diagnostic message.</summary>
@@ -36,7 +70,7 @@ namespace CircuitSimulator.Unity
         /// <summary>Gets the original domain exception.</summary>
         public Exception Exception { get; }
 
-        /// <summary>Gets structured Core validation issues, when compilation produced them.</summary>
-        public IReadOnlyList<CircuitValidationIssue> ValidationIssues { get; }
+        /// <summary>Gets structured validation issues, when compilation produced them.</summary>
+        public IReadOnlyList<CircuitDiagnostic> ValidationIssues { get; }
     }
 }

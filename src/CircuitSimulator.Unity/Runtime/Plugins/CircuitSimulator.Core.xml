@@ -304,6 +304,11 @@
             A two-terminal Shockley diode.
             </summary>
         </member>
+        <member name="F:CircuitSimulator.Core.Components.ComponentKind.Switch">
+            <summary>
+            A controllable ideal two-terminal switch.
+            </summary>
+        </member>
         <member name="T:CircuitSimulator.Core.Components.CurrentSourceParameters">
             <summary>
             Immutable parameters for an independent current source.
@@ -453,6 +458,21 @@
             <summary>Gets the phase in radians.</summary>
         </member>
         <member name="M:CircuitSimulator.Core.Components.SinusoidalSourceWaveform.GetValue(System.Double)">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.SwitchParameters">
+            <summary>Immutable parameters for a controllable ideal switch.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.SwitchParameters.#ctor(System.Boolean)">
+            <summary>Initializes ideal-switch parameters.</summary>
+            <param name="initiallyClosed">
+            <see langword="true"/> to start as an ideal short; <see langword="false"/> to start as an open circuit.
+            </param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.SwitchParameters.InitiallyClosed">
+            <summary>Gets whether a new simulation run starts with the switch closed.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.SwitchParameters.Kind">
             <inheritdoc />
         </member>
         <member name="T:CircuitSimulator.Core.Components.VoltageSourceParameters">
@@ -919,6 +939,14 @@
         <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddDiode(System.String,System.Double,System.Double,System.Double)">
             <summary>Adds a two-terminal Shockley diode.</summary>
         </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddSwitch(System.String,System.Boolean)">
+            <summary>Adds a controllable ideal two-terminal switch.</summary>
+            <param name="name">The unique component name.</param>
+            <param name="initiallyClosed">
+            <see langword="true"/> to start as an ideal short; <see langword="false"/> to start open.
+            </param>
+            <returns>A handle containing the component identifier and ordered terminals.</returns>
+        </member>
         <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.Connect(CircuitSimulator.Core.Model.TerminalId,CircuitSimulator.Core.Model.TerminalId)">
             <summary>
             Connects two terminals with an ideal wire.
@@ -1319,7 +1347,7 @@
         </member>
         <member name="P:CircuitSimulator.Core.Results.DcOperatingPointResult.BranchCurrents">
             <summary>
-            Gets solved branch currents for voltage sources.
+            Gets solved branch currents for voltage sources, inductors, and ideal switches.
             </summary>
         </member>
         <member name="M:CircuitSimulator.Core.Results.DcOperatingPointResult.GetNodeVoltage(CircuitSimulator.Core.Model.NodeId)">
@@ -1338,7 +1366,7 @@
         </member>
         <member name="M:CircuitSimulator.Core.Results.DcOperatingPointResult.GetBranchCurrent(CircuitSimulator.Core.Model.ComponentId)">
             <summary>
-            Gets the branch current for a voltage source.
+            Gets the branch current for a voltage source, inductor, or ideal switch.
             </summary>
             <param name="componentId">The voltage-source component identifier.</param>
             <returns>The branch current in amperes, positive from terminal 0 to terminal 1.</returns>
@@ -1413,7 +1441,7 @@
             <summary>Gets positive-to-negative current for a component at this sample.</summary>
         </member>
         <member name="M:CircuitSimulator.Core.Results.TransientSample.GetBranchCurrent(CircuitSimulator.Core.Model.ComponentId)">
-            <summary>Gets a solved voltage-source or inductor branch current.</summary>
+            <summary>Gets a solved voltage-source, inductor, or switch branch current.</summary>
         </member>
         <member name="T:CircuitSimulator.Core.Results.TransientSimulationResult">
             <summary>Immutable result of a completed transient simulation.</summary>
@@ -1550,6 +1578,18 @@
         <member name="P:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.LatestSample">
             <summary>Gets the latest committed sample, or <see langword="null"/> before the first step.</summary>
         </member>
+        <member name="M:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.GetSwitchState(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>Gets the current control state of an ideal switch.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.TryGetSwitchState(CircuitSimulator.Core.Model.ComponentId,System.Boolean@)">
+            <summary>Attempts to get the current control state of an ideal switch.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.SetSwitchState(CircuitSimulator.Core.Model.ComponentId,System.Boolean)">
+            <summary>
+            Changes an ideal switch state for the next numerical step without resetting time or committed history.
+            </summary>
+            <remarks>This method is thread-safe and may be called while <see cref="M:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.RunAsync(System.Threading.CancellationToken)"/> is active.</remarks>
+        </member>
         <member name="M:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.Advance(System.Threading.CancellationToken)">
             <summary>
             Immediately advances exactly one fixed integration step without wall-clock pacing.
@@ -1622,6 +1662,17 @@
         </member>
         <member name="M:CircuitSimulator.Core.Simulation.SimulationState.GetInductorState(CircuitSimulator.Core.Model.ComponentId)">
             <summary>Gets committed inductor history.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.SimulationState.GetSwitchState(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>Gets the current control state of an ideal switch.</summary>
+            <exception cref="T:CircuitSimulator.Core.Simulation.SimulationException">Thrown when the component is missing or is not a switch.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.SimulationState.TryGetSwitchState(CircuitSimulator.Core.Model.ComponentId,System.Boolean@)">
+            <summary>Attempts to get the current control state of an ideal switch.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.SimulationState.SetSwitchState(CircuitSimulator.Core.Model.ComponentId,System.Boolean)">
+            <summary>Changes an ideal switch state for the next simulation step.</summary>
+            <exception cref="T:CircuitSimulator.Core.Simulation.SimulationException">Thrown when the component is missing or is not a switch.</exception>
         </member>
         <member name="T:CircuitSimulator.Core.Simulation.TransientInitialConditions">
             <summary>Defines explicit reactive initial conditions for one transient run.</summary>

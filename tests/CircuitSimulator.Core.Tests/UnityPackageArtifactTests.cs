@@ -23,6 +23,13 @@ public sealed class UnityPackageArtifactTests
         Assert.Equal("CircuitSimulator.Core", packagedCore.Name);
         Assert.Equal(runningCore.Version, packagedCore.Version);
 
+        var packagedAssembly = Assembly.LoadFile(corePath);
+        Assert.NotNull(packagedAssembly.GetType("CircuitSimulator.Core.Components.SwitchParameters"));
+        Assert.NotNull(
+            packagedAssembly
+                .GetType("CircuitSimulator.Core.Simulation.RealtimeSimulationSession")
+                ?.GetMethod("SetSwitchState"));
+
         var mathNet = AssemblyName.GetAssemblyName(mathNetPath);
         Assert.Equal("MathNet.Numerics", mathNet.Name);
         Assert.Equal(new Version(5, 0, 0, 0), mathNet.Version);
@@ -32,6 +39,7 @@ public sealed class UnityPackageArtifactTests
         Assert.Equal(
             "com.evgh.circuit-simulator",
             manifest.RootElement.GetProperty("name").GetString());
+        Assert.Equal("1.1.0", manifest.RootElement.GetProperty("version").GetString());
         Assert.Equal("6000.0", manifest.RootElement.GetProperty("unity").GetString());
     }
 

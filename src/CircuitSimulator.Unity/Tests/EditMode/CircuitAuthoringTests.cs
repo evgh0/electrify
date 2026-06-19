@@ -68,5 +68,43 @@ namespace CircuitSimulator.Unity.Tests
             Assert.That(wire == null, Is.True);
             Assert.That(simulation.IsDirty, Is.True);
         }
+
+        [Test]
+        public void SwitchFactoryChangesLiveStateWithoutMarkingTopologyDirty()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var circuitSwitch = simulation.AddSwitch("S1");
+            var load = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.Connect(source.Positive, circuitSwitch.Positive);
+            simulation.Connect(circuitSwitch.Negative, load.Positive);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            Assert.That(circuitSwitch.IsClosed, Is.False);
+
+            circuitSwitch.Close();
+
+            Assert.That(circuitSwitch.IsClosed, Is.True);
+            Assert.That(simulation.IsDirty, Is.False);
+        }
+
+        [Test]
+        public void ButtonsSupportNormallyOpenAndNormallyClosedContacts()
+        {
+            var button = simulation.AddButton("PB1");
+            Assert.That(button.IsElectricallyClosed, Is.False);
+
+            button.Press();
+            Assert.That(button.IsPressed, Is.True);
+            Assert.That(button.IsElectricallyClosed, Is.True);
+
+            button.Release();
+            button.NormallyClosed = true;
+            Assert.That(button.IsElectricallyClosed, Is.True);
+
+            button.Press();
+            Assert.That(button.IsElectricallyClosed, Is.False);
+        }
     }
 }

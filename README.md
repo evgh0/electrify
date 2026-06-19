@@ -22,7 +22,7 @@ tests/CircuitSimulator.RealtimeDemo.Tests
 
 The editor projects add an Avalonia transient showcase without introducing any Avalonia dependency into the simulation core. `Editor.Contracts` owns fixed schematic geometry, `Editor` owns demo definitions, orchestration, chart data, and custom rendering, and `Editor.App` is the desktop host.
 
-`CircuitSimulator.Unity` is a Git-installable Unity Package Manager package for Unity 6. It provides typed resistor, capacitor, inductor, diode, voltage-source, and current-source behaviours; terminal/wire authoring; automatic hierarchy registration; frame-driven realtime simulation; per-device voltage/current/power readings; runtime creation and deletion helpers; inspectors; gizmos; tests; and an RC sample. Install `https://github.com/evgh0/electrify.git?path=/src/CircuitSimulator.Unity` through Unity Package Manager. The package contains .NET Standard 2.1 builds of Core and Math.NET, while Core remains independent of Unity.
+`CircuitSimulator.Unity` is a Git-installable Unity Package Manager package for Unity 6. It provides typed passive devices, sources, ideal switches, momentary buttons, terminal/wire authoring, automatic hierarchy registration, frame-driven realtime simulation, mapped readings, runtime creation/deletion helpers, inspectors, gizmos, tests, and an RC sample. Install `https://github.com/evgh0/electrify.git?path=/src/CircuitSimulator.Unity` through Unity Package Manager. The package contains .NET Standard 2.1 builds of Core and Math.NET, while Core remains independent of Unity.
 
 ## Avalonia transient lab
 
@@ -76,6 +76,7 @@ Supported components:
 - capacitor, in farads;
 - inductor, in henries;
 - Shockley diode.
+- controllable ideal switch.
 
 Reactive/passive parameters must be finite and greater than zero. Source values must be finite. Independent voltage and current sources can use constant or sinusoidal time-domain waveforms while retaining a separate DC operating-point value.
 
@@ -115,7 +116,9 @@ The unknown vector is ordered as:
 Variable ordering is deterministic:
 
 1. non-ground node voltages ordered by node ID;
-2. voltage-source branch currents ordered by component ID.
+2. voltage-source branch currents ordered by component ID;
+3. inductor branch currents ordered by component ID;
+4. ideal-switch branch currents ordered by component ID.
 
 Positive RHS current means current injected into a node. A current source from positive node `p` to negative node `n` stamps:
 
@@ -205,6 +208,20 @@ Render(session.LatestSample);
 ```
 
 Ending or cancelling `RunAsync` pauses at the last committed sample. Starting it again on the same session resumes reactive history with a fresh wall-clock anchor. Realtime pacing is best-effort rather than a hard real-time scheduling guarantee.
+
+Ideal switches remain part of the compiled MNA system in both states, so changing a switch does not recompile the circuit or reset simulation state:
+
+```csharp
+var contact = builder.AddSwitch("S1", initiallyClosed: false);
+var session = new RealtimeSimulationSession(
+    builder.Build(),
+    new RealtimeSimulationOptions(1e-3));
+
+session.SetSwitchState(contact.ComponentId, true); // Applied by the next step.
+var sample = session.Advance();
+```
+
+A closed switch is an exact zero-volt constraint; an open switch enforces exactly zero branch current. Switch state is sampled once at the start of each step and may be changed safely while `RunAsync` is active. If opening an ideal contact creates a singular floating circuit, the step fails transactionally: time and capacitor/inductor history remain committed at the previous sample, and closing the contact permits a retry on the same session.
 
 ## Example
 

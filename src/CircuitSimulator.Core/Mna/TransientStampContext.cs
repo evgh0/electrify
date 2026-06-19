@@ -7,6 +7,7 @@ namespace CircuitSimulator.Core.Mna;
 public sealed class TransientStampContext
 {
     private readonly double[]? _solutionEstimate;
+    private readonly IReadOnlyDictionary<Model.ComponentId, bool> _switchStates;
 
     /// <summary>Initializes a transient stamp context.</summary>
     public TransientStampContext(
@@ -15,6 +16,17 @@ public sealed class TransientStampContext
         double time,
         double timeStep,
         IReadOnlyList<double>? solutionEstimate = null)
+        : this(circuit, state, time, timeStep, state?.CaptureSwitchStates(), solutionEstimate)
+    {
+    }
+
+    internal TransientStampContext(
+        CompiledCircuit circuit,
+        SimulationState state,
+        double time,
+        double timeStep,
+        IReadOnlyDictionary<Model.ComponentId, bool>? switchStates,
+        IReadOnlyList<double>? solutionEstimate = null)
     {
         Circuit = circuit ?? throw new ArgumentNullException(nameof(circuit));
         State = state ?? throw new ArgumentNullException(nameof(state));
@@ -22,6 +34,10 @@ public sealed class TransientStampContext
         {
             throw new ArgumentException("Simulation state belongs to a different compiled circuit.", nameof(state));
         }
+
+        _switchStates = switchStates is null
+            ? throw new ArgumentNullException(nameof(switchStates))
+            : new Dictionary<Model.ComponentId, bool>(switchStates);
 
         if (!Guard.IsFinite(time))
         {
@@ -65,4 +81,9 @@ public sealed class TransientStampContext
 
     /// <summary>Gets the nonlinear solution estimate when present.</summary>
     public IReadOnlyList<double>? SolutionEstimate => _solutionEstimate;
+
+    internal bool GetSwitchState(Model.ComponentId componentId) =>
+        _switchStates.TryGetValue(componentId, out var isClosed)
+            ? isClosed
+            : throw new MnaAssemblyException($"No switch state exists for component {componentId}.");
 }

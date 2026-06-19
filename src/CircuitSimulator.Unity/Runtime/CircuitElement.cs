@@ -94,7 +94,7 @@ namespace CircuitSimulator.Unity
         public TwoTerminalCircuitComponent Owner => GetComponentInParent<TwoTerminalCircuitComponent>();
     }
 
-    /// <summary>Base class for a topology connection, including future switches and buttons.</summary>
+    /// <summary>Base class for static topology connections such as ideal wires.</summary>
     public abstract class CircuitConnection : CircuitElement
     {
         [SerializeField]
@@ -125,7 +125,7 @@ namespace CircuitSimulator.Unity
             NotifyCircuitChanged();
         }
 
-        /// <summary>Allows a derived controllable connection to invalidate topology after changing state.</summary>
+        /// <summary>Allows a derived connection to invalidate topology after changing conductivity.</summary>
         protected void NotifyConductivityChanged()
         {
             NotifyCircuitChanged();

@@ -18,15 +18,19 @@ public sealed class SimulationState
 {
     private readonly Dictionary<ComponentId, CapacitorState> _capacitors;
     private readonly Dictionary<ComponentId, InductorState> _inductors;
+    private readonly Dictionary<ComponentId, bool> _switches;
+    private readonly object _switchLock = new();
 
     private SimulationState(
         CompiledCircuit circuit,
         Dictionary<ComponentId, CapacitorState> capacitors,
-        Dictionary<ComponentId, InductorState> inductors)
+        Dictionary<ComponentId, InductorState> inductors,
+        Dictionary<ComponentId, bool> switches)
     {
         Circuit = circuit;
         _capacitors = capacitors;
         _inductors = inductors;
+        _switches = switches;
     }
 
     /// <summary>Gets the compiled circuit associated with this state.</summary>
@@ -56,7 +60,13 @@ public sealed class SimulationState
                 component => new InductorState(
                     initialConditions.InductorCurrents.GetValueOrDefault(component.ComponentId)));
 
-        return new SimulationState(circuit, capacitors, inductors);
+        var switches = circuit.Components
+            .Where(component => component.Kind == ComponentKind.Switch)
+            .ToDictionary(
+                component => component.ComponentId,
+                component => ((SwitchParameters)component.Parameters).InitiallyClosed);
+
+        return new SimulationState(circuit, capacitors, inductors, switches);
     }
 
     /// <summary>Gets committed capacitor history.</summary>
@@ -70,6 +80,64 @@ public sealed class SimulationState
         _inductors.TryGetValue(componentId, out var state)
             ? state
             : throw new SimulationException($"Component {componentId} has no inductor state.");
+
+    /// <summary>Gets the current control state of an ideal switch.</summary>
+    /// <exception cref="SimulationException">Thrown when the component is missing or is not a switch.</exception>
+    public bool GetSwitchState(ComponentId componentId)
+    {
+        EnsureSwitchComponent(componentId);
+        lock (_switchLock)
+        {
+            return _switches[componentId];
+        }
+    }
+
+    /// <summary>Attempts to get the current control state of an ideal switch.</summary>
+    public bool TryGetSwitchState(ComponentId componentId, out bool isClosed)
+    {
+        lock (_switchLock)
+        {
+            return _switches.TryGetValue(componentId, out isClosed);
+        }
+    }
+
+    /// <summary>Changes an ideal switch state for the next simulation step.</summary>
+    /// <exception cref="SimulationException">Thrown when the component is missing or is not a switch.</exception>
+    public void SetSwitchState(ComponentId componentId, bool isClosed)
+    {
+        EnsureSwitchComponent(componentId);
+        lock (_switchLock)
+        {
+            _switches[componentId] = isClosed;
+        }
+    }
+
+    internal IReadOnlyDictionary<ComponentId, bool> CaptureSwitchStates()
+    {
+        lock (_switchLock)
+        {
+            return new Dictionary<ComponentId, bool>(_switches);
+        }
+    }
+
+    private void EnsureSwitchComponent(ComponentId componentId)
+    {
+        CompiledComponent component;
+        try
+        {
+            component = Circuit.GetComponent(componentId);
+        }
+        catch (KeyNotFoundException exception)
+        {
+            throw new SimulationException($"Switch state references missing component {componentId}.", exception);
+        }
+
+        if (component.Kind != ComponentKind.Switch)
+        {
+            throw new SimulationException(
+                $"Switch state requires kind {ComponentKind.Switch}, but component '{component.Name}' ({componentId}) is {component.Kind}.");
+        }
+    }
 
     internal void Commit(IReadOnlyList<double> solution, double timeStep)
     {
