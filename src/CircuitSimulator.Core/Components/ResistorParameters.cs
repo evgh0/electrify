@@ -19,7 +19,7 @@ public sealed record ResistorParameters : IComponentParameters
     /// <param name="resistance">The finite, strictly positive resistance in ohms.</param>
     public ResistorParameters(double resistance)
     {
-        if (!double.IsFinite(resistance) || resistance <= 0.0)
+        if (!Guard.IsFinite(resistance) || resistance <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(resistance), resistance, "Resistance must be finite and greater than zero.");
         }

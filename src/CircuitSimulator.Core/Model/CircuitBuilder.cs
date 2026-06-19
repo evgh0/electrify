@@ -116,7 +116,7 @@ public sealed class CircuitBuilder
     /// <exception cref="CircuitModelException">Thrown when any terminal is not owned by this builder.</exception>
     public void Connect(params TerminalId[] terminals)
     {
-        ArgumentNullException.ThrowIfNull(terminals);
+        Guard.NotNull(terminals, nameof(terminals));
 
         if (terminals.Length < 2)
         {
@@ -156,8 +156,8 @@ public sealed class CircuitBuilder
         string positiveName = "+",
         string negativeName = "-")
     {
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(parameters);
+        Guard.NotNull(name, nameof(name));
+        Guard.NotNull(parameters, nameof(parameters));
 
         if (string.IsNullOrWhiteSpace(name))
         {

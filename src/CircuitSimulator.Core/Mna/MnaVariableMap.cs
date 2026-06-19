@@ -43,8 +43,8 @@ public sealed class MnaVariableMap
         IEnumerable<ElectricalNode> nodes,
         IEnumerable<CompiledComponent> components)
     {
-        ArgumentNullException.ThrowIfNull(nodes);
-        ArgumentNullException.ThrowIfNull(components);
+        Guard.NotNull(nodes, nameof(nodes));
+        Guard.NotNull(components, nameof(components));
 
         var variables = new List<MnaVariable>();
         var nodeVoltageIndexes = new Dictionary<NodeId, VariableIndex>();

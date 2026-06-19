@@ -30,7 +30,7 @@ public sealed class MnaAssembler
     /// <summary>Assembles an affine DC system with nonlinear devices linearized around an iterate.</summary>
     public MnaLinearSystem AssembleDcLinearized(CompiledCircuit circuit, NonlinearStampContext nonlinearContext)
     {
-        ArgumentNullException.ThrowIfNull(nonlinearContext);
+        Guard.NotNull(nonlinearContext, nameof(nonlinearContext));
         if (!ReferenceEquals(circuit, nonlinearContext.Circuit))
         {
             throw new ArgumentException("Nonlinear context belongs to a different compiled circuit.", nameof(nonlinearContext));
@@ -42,7 +42,7 @@ public sealed class MnaAssembler
     /// <summary>Assembles one backward-Euler transient system.</summary>
     public MnaLinearSystem AssembleTransient(TransientStampContext transientContext)
     {
-        ArgumentNullException.ThrowIfNull(transientContext);
+        Guard.NotNull(transientContext, nameof(transientContext));
         var circuit = transientContext.Circuit;
         var builder = new DenseMnaSystemBuilder(circuit.VariableMap.Dimension);
         var context = new MnaStampContext(circuit);
@@ -57,7 +57,7 @@ public sealed class MnaAssembler
 
     private MnaLinearSystem AssembleDcCore(CompiledCircuit circuit, NonlinearStampContext? nonlinearContext)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
+        Guard.NotNull(circuit, nameof(circuit));
         var builder = new DenseMnaSystemBuilder(circuit.VariableMap.Dimension);
         var context = new MnaStampContext(circuit);
 

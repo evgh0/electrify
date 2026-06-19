@@ -27,7 +27,7 @@ public sealed class TransientSimulationSolver
         TransientSimulationOptions options,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
+        Guard.NotNull(circuit, nameof(circuit));
         return Solve(new CircuitCompiler().Compile(circuit), options, cancellationToken);
     }
 
@@ -37,8 +37,8 @@ public sealed class TransientSimulationSolver
         TransientSimulationOptions options,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
-        ArgumentNullException.ThrowIfNull(options);
+        Guard.NotNull(circuit, nameof(circuit));
+        Guard.NotNull(options, nameof(options));
         var stepper = new TransientSimulationStepper(
             circuit,
             options.StartTime,

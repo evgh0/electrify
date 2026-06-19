@@ -15,7 +15,7 @@ public sealed class MathNetLinearSystemSolver : ILinearSystemSolver
     /// <param name="pivotTolerance">The non-negative pivot tolerance for singular detection.</param>
     public MathNetLinearSystemSolver(double pivotTolerance = NumericalConstants.DefaultPivotTolerance)
     {
-        if (!double.IsFinite(pivotTolerance) || pivotTolerance < 0.0)
+        if (!Guard.IsFinite(pivotTolerance) || pivotTolerance < 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(pivotTolerance), pivotTolerance, "Pivot tolerance must be finite and non-negative.");
         }
@@ -31,7 +31,7 @@ public sealed class MathNetLinearSystemSolver : ILinearSystemSolver
     /// <inheritdoc />
     public double[] Solve(MnaLinearSystem system)
     {
-        ArgumentNullException.ThrowIfNull(system);
+        Guard.NotNull(system, nameof(system));
 
         if (system.Dimension == 0)
         {
@@ -50,7 +50,7 @@ public sealed class MathNetLinearSystemSolver : ILinearSystemSolver
 
             for (var index = 0; index < solution.Length; index++)
             {
-                if (!double.IsFinite(solution[index]))
+                if (!Guard.IsFinite(solution[index]))
                 {
                     throw new SingularMatrixException($"Math.NET returned a non-finite solution value at index {index}.");
                 }

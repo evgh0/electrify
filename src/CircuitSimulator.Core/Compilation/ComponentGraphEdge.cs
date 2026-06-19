@@ -15,7 +15,7 @@ public sealed class ComponentGraphEdge
     /// <param name="incidentNodes">The incident nodes in component terminal order.</param>
     public ComponentGraphEdge(ComponentId componentId, IEnumerable<NodeId> incidentNodes)
     {
-        ArgumentNullException.ThrowIfNull(incidentNodes);
+        Guard.NotNull(incidentNodes, nameof(incidentNodes));
 
         ComponentId = componentId;
         IncidentNodes = new ReadOnlyCollection<NodeId>(incidentNodes.ToArray());

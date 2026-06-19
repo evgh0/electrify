@@ -23,9 +23,9 @@ public sealed class ComponentDefinition
         IEnumerable<TerminalId> terminalIds,
         IComponentParameters parameters)
     {
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(terminalIds);
-        ArgumentNullException.ThrowIfNull(parameters);
+        Guard.NotNull(name, nameof(name));
+        Guard.NotNull(terminalIds, nameof(terminalIds));
+        Guard.NotNull(parameters, nameof(parameters));
 
         Id = id;
         Name = name;

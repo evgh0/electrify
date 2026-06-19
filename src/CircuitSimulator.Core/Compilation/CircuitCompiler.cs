@@ -19,7 +19,7 @@ public sealed class CircuitCompiler
     /// <exception cref="CircuitCompilationException">Thrown when compilation validation fails.</exception>
     public CompiledCircuit Compile(Circuit circuit)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
+        Guard.NotNull(circuit, nameof(circuit));
 
         var issues = new List<CircuitValidationIssue>();
         ValidatePhysicalCircuit(circuit, issues);
@@ -144,7 +144,7 @@ public sealed class CircuitCompiler
         HashSet<TerminalId> terminalIds,
         List<CircuitValidationIssue> issues)
     {
-        if (!Enum.IsDefined(component.Kind))
+        if (!Enum.IsDefined(typeof(ComponentKind), component.Kind))
         {
             issues.Add(new CircuitValidationIssue(
                 ValidationCodes.ComponentInvalidParameter,

@@ -34,7 +34,7 @@ public sealed record VoltageSourceParameters : IComponentParameters
     /// <summary>Initializes voltage-source DC and transient excitation.</summary>
     public VoltageSourceParameters(double dcValue, SourceWaveform transientWaveform)
     {
-        if (!double.IsFinite(dcValue))
+        if (!Guard.IsFinite(dcValue))
         {
             throw new ArgumentOutOfRangeException(nameof(dcValue), dcValue, "DC voltage must be finite.");
         }

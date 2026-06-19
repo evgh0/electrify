@@ -1,0 +1,15 @@
+{
+  "name": "CircuitSimulator.Unity.EditModeTests",
+  "rootNamespace": "CircuitSimulator.Unity.Tests",
+  "references": [
+    "CircuitSimulator.Unity.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "autoReferenced": false
+}

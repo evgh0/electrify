@@ -37,7 +37,7 @@ public sealed class SimulationState
         CompiledCircuit circuit,
         TransientInitialConditions? initialConditions = null)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
+        Guard.NotNull(circuit, nameof(circuit));
         initialConditions ??= TransientInitialConditions.Zero;
         ValidateInitialConditionIds(circuit, initialConditions.CapacitorVoltages, ComponentKind.Capacitor);
         ValidateInitialConditionIds(circuit, initialConditions.InductorCurrents, ComponentKind.Inductor);
@@ -73,7 +73,7 @@ public sealed class SimulationState
 
     internal void Commit(IReadOnlyList<double> solution, double timeStep)
     {
-        ArgumentNullException.ThrowIfNull(solution);
+        Guard.NotNull(solution, nameof(solution));
         if (solution.Count != Circuit.VariableMap.Dimension)
         {
             throw new ArgumentException("Solution length must match the MNA variable-map dimension.", nameof(solution));
@@ -154,7 +154,7 @@ public sealed class SimulationState
 
     private static void EnsureFinite(CompiledComponent component, params double[] values)
     {
-        if (values.Any(value => !double.IsFinite(value)))
+        if (values.Any(value => !Guard.IsFinite(value)))
         {
             throw new SimulationException(
                 $"State update for component '{component.Name}' ({component.ComponentId}) produced a non-finite value.");

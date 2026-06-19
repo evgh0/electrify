@@ -15,8 +15,8 @@ public sealed class MnaLinearSystem
     /// <param name="rightHandSide">The right-hand side z.</param>
     public MnaLinearSystem(double[,] matrix, double[] rightHandSide)
     {
-        ArgumentNullException.ThrowIfNull(matrix);
-        ArgumentNullException.ThrowIfNull(rightHandSide);
+        Guard.NotNull(matrix, nameof(matrix));
+        Guard.NotNull(rightHandSide, nameof(rightHandSide));
 
         var rowCount = matrix.GetLength(0);
         var columnCount = matrix.GetLength(1);
@@ -32,14 +32,14 @@ public sealed class MnaLinearSystem
 
         for (var row = 0; row < rowCount; row++)
         {
-            if (!double.IsFinite(rightHandSide[row]))
+            if (!Guard.IsFinite(rightHandSide[row]))
             {
                 throw new ArgumentException("Right-hand side entries must be finite.", nameof(rightHandSide));
             }
 
             for (var column = 0; column < columnCount; column++)
             {
-                if (!double.IsFinite(matrix[row, column]))
+                if (!Guard.IsFinite(matrix[row, column]))
                 {
                     throw new ArgumentException("Matrix entries must be finite.", nameof(matrix));
                 }

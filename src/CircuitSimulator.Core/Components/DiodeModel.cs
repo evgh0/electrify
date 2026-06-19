@@ -8,8 +8,8 @@ public static class DiodeModel
     /// <summary>Evaluates current, conductance, and equivalent-source current at a diode voltage.</summary>
     public static DiodeLinearization Evaluate(DiodeParameters parameters, double voltage)
     {
-        ArgumentNullException.ThrowIfNull(parameters);
-        if (!double.IsFinite(voltage))
+        Guard.NotNull(parameters, nameof(parameters));
+        if (!Guard.IsFinite(voltage))
         {
             throw new ArgumentOutOfRangeException(nameof(voltage), voltage, "Diode voltage must be finite.");
         }
@@ -34,7 +34,7 @@ public static class DiodeModel
         var current = parameters.SaturationCurrent * (exponential - 1.0);
         var conductance = parameters.SaturationCurrent * exponentialDerivative / voltageScale;
         var equivalentCurrent = current - (conductance * voltage);
-        if (!double.IsFinite(current) || !double.IsFinite(conductance) || !double.IsFinite(equivalentCurrent))
+        if (!Guard.IsFinite(current) || !Guard.IsFinite(conductance) || !Guard.IsFinite(equivalentCurrent))
         {
             throw new ArithmeticException("Diode evaluation produced a non-finite value.");
         }

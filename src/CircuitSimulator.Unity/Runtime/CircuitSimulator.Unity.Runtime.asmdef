@@ -1,0 +1,17 @@
+{
+  "name": "CircuitSimulator.Unity.Runtime",
+  "rootNamespace": "CircuitSimulator.Unity",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "CircuitSimulator.Core.dll",
+    "MathNet.Numerics.dll"
+  ],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

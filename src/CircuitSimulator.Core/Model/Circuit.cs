@@ -23,10 +23,10 @@ public sealed class Circuit
         IEnumerable<WireDefinition> wires,
         IEnumerable<TerminalId> groundTerminals)
     {
-        ArgumentNullException.ThrowIfNull(components);
-        ArgumentNullException.ThrowIfNull(terminals);
-        ArgumentNullException.ThrowIfNull(wires);
-        ArgumentNullException.ThrowIfNull(groundTerminals);
+        Guard.NotNull(components, nameof(components));
+        Guard.NotNull(terminals, nameof(terminals));
+        Guard.NotNull(wires, nameof(wires));
+        Guard.NotNull(groundTerminals, nameof(groundTerminals));
 
         var componentArray = components.ToArray();
         var terminalArray = terminals.ToArray();

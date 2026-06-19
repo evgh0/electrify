@@ -38,7 +38,7 @@ public sealed class DcOperatingPointSolver
     /// <returns>The DC operating-point result.</returns>
     public DcOperatingPointResult Solve(Circuit circuit)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
+        Guard.NotNull(circuit, nameof(circuit));
 
         var compiledCircuit = new CircuitCompiler().Compile(circuit);
         return Solve(compiledCircuit);
@@ -51,7 +51,7 @@ public sealed class DcOperatingPointSolver
     /// <returns>The DC operating-point result.</returns>
     public DcOperatingPointResult Solve(CompiledCircuit circuit)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
+        Guard.NotNull(circuit, nameof(circuit));
         DcAnalysisValidator.Validate(circuit);
 
         MnaLinearSystem linearSystem;

@@ -23,12 +23,12 @@ public sealed class TransientStampContext
             throw new ArgumentException("Simulation state belongs to a different compiled circuit.", nameof(state));
         }
 
-        if (!double.IsFinite(time))
+        if (!Guard.IsFinite(time))
         {
             throw new ArgumentOutOfRangeException(nameof(time), time, "Time must be finite.");
         }
 
-        if (!double.IsFinite(timeStep) || timeStep <= 0.0)
+        if (!Guard.IsFinite(timeStep) || timeStep <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(timeStep), timeStep, "Time step must be finite and greater than zero.");
         }
@@ -41,7 +41,7 @@ public sealed class TransientStampContext
             }
 
             _solutionEstimate = solutionEstimate.ToArray();
-            if (_solutionEstimate.Any(value => !double.IsFinite(value)))
+            if (_solutionEstimate.Any(value => !Guard.IsFinite(value)))
             {
                 throw new ArgumentException("Solution estimate values must be finite.", nameof(solutionEstimate));
             }

@@ -22,9 +22,9 @@ public sealed class CompiledComponent
         IComponentParameters parameters,
         IEnumerable<NodeId> nodes)
     {
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(parameters);
-        ArgumentNullException.ThrowIfNull(nodes);
+        Guard.NotNull(name, nameof(name));
+        Guard.NotNull(parameters, nameof(parameters));
+        Guard.NotNull(nodes, nameof(nodes));
 
         ComponentId = componentId;
         Name = name;

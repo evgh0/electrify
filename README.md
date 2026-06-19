@@ -12,6 +12,7 @@ src/CircuitSimulator.Editor.Contracts
 src/CircuitSimulator.Editor
 src/CircuitSimulator.Editor.App
 src/CircuitSimulator.RealtimeDemo
+src/CircuitSimulator.Unity
 tests/CircuitSimulator.Core.Tests
 tests/CircuitSimulator.Editor.Tests
 tests/CircuitSimulator.RealtimeDemo.Tests
@@ -20,6 +21,8 @@ tests/CircuitSimulator.RealtimeDemo.Tests
 `CircuitSimulator.Core` contains the physical model, topology compiler, validation, MNA assembly, Math.NET-backed linear solving, linear and nonlinear DC operating points, bounded backward-Euler transient simulation, and ongoing fixed-step realtime sessions. The console project is a demonstration only.
 
 The editor projects add an Avalonia transient showcase without introducing any Avalonia dependency into the simulation core. `Editor.Contracts` owns fixed schematic geometry, `Editor` owns demo definitions, orchestration, chart data, and custom rendering, and `Editor.App` is the desktop host.
+
+`CircuitSimulator.Unity` is a Git-installable Unity Package Manager package for Unity 6. It provides typed resistor, capacitor, inductor, diode, voltage-source, and current-source behaviours; terminal/wire authoring; automatic hierarchy registration; frame-driven realtime simulation; per-device voltage/current/power readings; runtime creation and deletion helpers; inspectors; gizmos; tests; and an RC sample. Install `https://github.com/evgh0/electrify.git?path=/src/CircuitSimulator.Unity` through Unity Package Manager. The package contains .NET Standard 2.1 builds of Core and Math.NET, while Core remains independent of Unity.
 
 ## Avalonia transient lab
 

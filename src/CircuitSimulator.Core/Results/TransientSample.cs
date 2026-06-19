@@ -92,7 +92,7 @@ public sealed class TransientSample
                     $"Component '{component.Name}' ({component.ComponentId}) has unsupported parameters.")
             };
 
-            if (!double.IsFinite(current))
+            if (!Guard.IsFinite(current))
             {
                 throw new SimulationException(
                     $"Current for component '{component.Name}' ({component.ComponentId}) is non-finite at time {Time:R}.");

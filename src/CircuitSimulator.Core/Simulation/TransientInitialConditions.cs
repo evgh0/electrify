@@ -34,7 +34,7 @@ public sealed class TransientInitialConditions
 
         foreach (var pair in copy)
         {
-            if (!double.IsFinite(pair.Value))
+            if (!Guard.IsFinite(pair.Value))
             {
                 throw new ArgumentException($"Initial condition for {pair.Key} must be finite.", parameterName);
             }

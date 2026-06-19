@@ -21,11 +21,11 @@ public sealed class NewtonRaphsonSolver
         Func<IReadOnlyList<double>, IReadOnlyList<double>, double[]>? limitStep = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(variableMap);
-        ArgumentNullException.ThrowIfNull(linearize);
+        Guard.NotNull(variableMap, nameof(variableMap));
+        Guard.NotNull(linearize, nameof(linearize));
         options ??= NewtonRaphsonOptions.Default;
         var current = initialGuess?.ToArray() ?? new double[variableMap.Dimension];
-        if (current.Length != variableMap.Dimension || current.Any(value => !double.IsFinite(value)))
+        if (current.Length != variableMap.Dimension || current.Any(value => !Guard.IsFinite(value)))
         {
             throw new ArgumentException("Initial guess must contain one finite value per MNA variable.", nameof(initialGuess));
         }
@@ -53,7 +53,7 @@ public sealed class NewtonRaphsonSolver
                 candidate = limitStep(current, candidate);
             }
 
-            if (candidate.Length != current.Length || candidate.Any(value => !double.IsFinite(value)))
+            if (candidate.Length != current.Length || candidate.Any(value => !Guard.IsFinite(value)))
             {
                 throw new NonlinearConvergenceException(
                     $"Newton-Raphson produced a non-finite iterate at iteration {iteration}.",

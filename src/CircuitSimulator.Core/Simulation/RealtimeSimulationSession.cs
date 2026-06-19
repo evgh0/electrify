@@ -1,4 +1,7 @@
 using System.Runtime.CompilerServices;
+#if NETSTANDARD2_1
+using System.Diagnostics;
+#endif
 using CircuitSimulator.Core.Compilation;
 using CircuitSimulator.Core.Mna;
 using CircuitSimulator.Core.Model;
@@ -17,7 +20,9 @@ namespace CircuitSimulator.Core.Simulation;
 public sealed class RealtimeSimulationSession
 {
     private readonly TransientSimulationStepper _stepper;
+#if NET8_0_OR_GREATER
     private readonly TimeProvider _timeProvider;
+#endif
     private TransientSample? _latestSample;
     private int _activeOperation;
 
@@ -26,14 +31,24 @@ public sealed class RealtimeSimulationSession
         Circuit circuit,
         RealtimeSimulationOptions options,
         ILinearSystemSolver? linearSystemSolver = null,
-        MnaAssembler? assembler = null,
+        MnaAssembler? assembler = null
+#if NET8_0_OR_GREATER
+        ,
         TimeProvider? timeProvider = null)
+#else
+        )
+#endif
         : this(
             Compile(circuit),
             options,
             linearSystemSolver,
-            assembler,
+            assembler
+#if NET8_0_OR_GREATER
+            ,
             timeProvider)
+#else
+            )
+#endif
     {
     }
 
@@ -42,12 +57,19 @@ public sealed class RealtimeSimulationSession
         CompiledCircuit circuit,
         RealtimeSimulationOptions options,
         ILinearSystemSolver? linearSystemSolver = null,
-        MnaAssembler? assembler = null,
+        MnaAssembler? assembler = null
+#if NET8_0_OR_GREATER
+        ,
         TimeProvider? timeProvider = null)
+#else
+        )
+#endif
     {
         CompiledCircuit = circuit ?? throw new ArgumentNullException(nameof(circuit));
         Options = options ?? throw new ArgumentNullException(nameof(options));
+#if NET8_0_OR_GREATER
         _timeProvider = timeProvider ?? TimeProvider.System;
+#endif
         _stepper = new TransientSimulationStepper(
             circuit,
             startTime: 0.0,
@@ -104,7 +126,11 @@ public sealed class RealtimeSimulationSession
         EnterOperation();
         try
         {
+#if NET8_0_OR_GREATER
             var wallClockAnchor = _timeProvider.GetTimestamp();
+#else
+            var wallClock = Stopwatch.StartNew();
+#endif
             long stepsSinceAnchor = 0;
 
             while (true)
@@ -112,18 +138,26 @@ public sealed class RealtimeSimulationSession
                 cancellationToken.ThrowIfCancellationRequested();
                 stepsSinceAnchor = checked(stepsSinceAnchor + 1);
                 var targetElapsedSeconds = stepsSinceAnchor * Options.TimeStep;
-                if (!double.IsFinite(targetElapsedSeconds) ||
+                if (!Guard.IsFinite(targetElapsedSeconds) ||
                     targetElapsedSeconds > TimeSpan.MaxValue.TotalSeconds)
                 {
                     throw new SimulationException("Realtime wall-clock deadline exceeded the supported duration.");
                 }
 
                 var targetElapsed = TimeSpan.FromSeconds(targetElapsedSeconds);
+#if NET8_0_OR_GREATER
                 var elapsed = _timeProvider.GetElapsedTime(wallClockAnchor);
+#else
+                var elapsed = wallClock.Elapsed;
+#endif
                 var remaining = targetElapsed - elapsed;
                 if (remaining > TimeSpan.Zero)
                 {
+#if NET8_0_OR_GREATER
                     await Task.Delay(remaining, _timeProvider, cancellationToken).ConfigureAwait(false);
+#else
+                    await Task.Delay(remaining, cancellationToken).ConfigureAwait(false);
+#endif
                 }
 
                 yield return AdvanceCore(cancellationToken);
@@ -137,7 +171,7 @@ public sealed class RealtimeSimulationSession
 
     private static CompiledCircuit Compile(Circuit circuit)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
+        Guard.NotNull(circuit, nameof(circuit));
         return new CircuitCompiler().Compile(circuit);
     }
 

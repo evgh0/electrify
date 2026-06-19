@@ -25,9 +25,9 @@ public sealed class DcOperatingPointResult
     /// <param name="solution">The solved unknown vector.</param>
     public DcOperatingPointResult(CompiledCircuit circuit, MnaLinearSystem linearSystem, double[] solution)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
-        ArgumentNullException.ThrowIfNull(linearSystem);
-        ArgumentNullException.ThrowIfNull(solution);
+        Guard.NotNull(circuit, nameof(circuit));
+        Guard.NotNull(linearSystem, nameof(linearSystem));
+        Guard.NotNull(solution, nameof(solution));
 
         if (solution.Length != circuit.VariableMap.Dimension)
         {

@@ -21,8 +21,8 @@ public sealed class Netlist
         IReadOnlyDictionary<TerminalId, NodeId> terminalToNode,
         NodeId groundNodeId)
     {
-        ArgumentNullException.ThrowIfNull(nodes);
-        ArgumentNullException.ThrowIfNull(terminalToNode);
+        Guard.NotNull(nodes, nameof(nodes));
+        Guard.NotNull(terminalToNode, nameof(terminalToNode));
 
         Nodes = new ReadOnlyCollection<ElectricalNode>(nodes.ToArray());
         _terminalToNode = new ReadOnlyDictionary<TerminalId, NodeId>(new Dictionary<TerminalId, NodeId>(terminalToNode));

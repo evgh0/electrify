@@ -26,11 +26,11 @@ internal sealed class TransientSimulationStepper
         MnaAssembler assembler)
     {
         _circuit = circuit ?? throw new ArgumentNullException(nameof(circuit));
-        ArgumentNullException.ThrowIfNull(initialConditions);
+        Guard.NotNull(initialConditions, nameof(initialConditions));
         _newtonOptions = newtonOptions ?? throw new ArgumentNullException(nameof(newtonOptions));
         _linearSystemSolver = linearSystemSolver ?? throw new ArgumentNullException(nameof(linearSystemSolver));
         _assembler = assembler ?? throw new ArgumentNullException(nameof(assembler));
-        if (!double.IsFinite(startTime) || startTime < 0.0)
+        if (!Guard.IsFinite(startTime) || startTime < 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(startTime), startTime, "Start time must be finite and non-negative.");
         }
@@ -47,13 +47,13 @@ internal sealed class TransientSimulationStepper
 
     public TransientSample Advance(double timeStep, CancellationToken cancellationToken)
     {
-        if (!double.IsFinite(timeStep) || timeStep <= 0.0)
+        if (!Guard.IsFinite(timeStep) || timeStep <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(timeStep), timeStep, "Time step must be finite and greater than zero.");
         }
 
         var targetTime = CurrentTime + timeStep;
-        if (!double.IsFinite(targetTime) || targetTime <= CurrentTime)
+        if (!Guard.IsFinite(targetTime) || targetTime <= CurrentTime)
         {
             throw new SimulationException(
                 $"A transient step of {timeStep:R} s cannot advance simulation time {CurrentTime:R} s.");

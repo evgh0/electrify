@@ -1,0 +1,1820 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CircuitSimulator.Core</name>
+    </assembly>
+    <members>
+        <member name="T:CircuitSimulator.Core.Compilation.CircuitCompilationException">
+            <summary>
+            Represents a circuit compilation failure with a complete structured validation report.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.CircuitCompilationException.#ctor(System.String,CircuitSimulator.Core.Validation.CircuitValidationReport)">
+            <summary>
+            Initializes a new compilation exception.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="validationReport">The validation report that caused compilation to fail.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.CircuitCompilationException.#ctor(System.String,CircuitSimulator.Core.Validation.CircuitValidationReport,System.Exception)">
+            <summary>
+            Initializes a new compilation exception.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="validationReport">The validation report that caused compilation to fail.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CircuitCompilationException.ValidationReport">
+            <summary>
+            Gets the complete validation report.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Compilation.CircuitCompiler">
+            <summary>
+            Compiles physical circuit terminals and ideal wires into deterministic electrical nodes.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.CircuitCompiler.Compile(CircuitSimulator.Core.Model.Circuit)">
+            <summary>
+            Compiles a physical circuit into immutable topology and MNA variable metadata.
+            </summary>
+            <param name="circuit">The physical circuit.</param>
+            <returns>The compiled circuit.</returns>
+            <exception cref="T:CircuitSimulator.Core.Compilation.CircuitCompilationException">Thrown when compilation validation fails.</exception>
+        </member>
+        <member name="T:CircuitSimulator.Core.Compilation.CompiledCircuit">
+            <summary>
+            Immutable compiled circuit containing topology, graph, validation warnings, and MNA variable allocation.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.CompiledCircuit.#ctor(CircuitSimulator.Core.Model.Circuit,CircuitSimulator.Core.Compilation.Netlist,CircuitSimulator.Core.Compilation.NodeGraph,System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Compilation.CompiledComponent},CircuitSimulator.Core.Mna.MnaVariableMap,CircuitSimulator.Core.Validation.CircuitValidationReport)">
+            <summary>
+            Initializes a compiled circuit.
+            </summary>
+            <param name="sourceCircuit">The source physical circuit snapshot.</param>
+            <param name="netlist">The compiled terminal-to-node netlist.</param>
+            <param name="graph">The compiled node graph.</param>
+            <param name="components">The compiled components.</param>
+            <param name="variableMap">The MNA variable map.</param>
+            <param name="validationReport">The non-fatal validation report.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledCircuit.SourceCircuit">
+            <summary>
+            Gets the source physical circuit snapshot.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledCircuit.Netlist">
+            <summary>
+            Gets the compiled terminal-to-node netlist.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledCircuit.Graph">
+            <summary>
+            Gets the compiled node graph.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledCircuit.Components">
+            <summary>
+            Gets the compiled components.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledCircuit.VariableMap">
+            <summary>
+            Gets the deterministic MNA variable map.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledCircuit.ValidationReport">
+            <summary>
+            Gets non-fatal validation warnings attached to the compiled circuit.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.CompiledCircuit.GetComponent(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>
+            Gets a compiled component by identifier.
+            </summary>
+            <param name="componentId">The component identifier.</param>
+            <returns>The compiled component.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown when the component is not compiled.</exception>
+        </member>
+        <member name="T:CircuitSimulator.Core.Compilation.CompiledComponent">
+            <summary>
+            Represents a physical component after its terminals have been mapped to compiled nodes.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.CompiledComponent.#ctor(CircuitSimulator.Core.Model.ComponentId,System.String,CircuitSimulator.Core.Components.IComponentParameters,System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Model.NodeId})">
+            <summary>
+            Initializes a compiled component.
+            </summary>
+            <param name="componentId">The source component identifier.</param>
+            <param name="name">The source component name.</param>
+            <param name="parameters">The immutable component parameters.</param>
+            <param name="nodes">The compiled nodes in terminal order.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledComponent.ComponentId">
+            <summary>
+            Gets the source component identifier.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledComponent.Name">
+            <summary>
+            Gets the source component name.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledComponent.Parameters">
+            <summary>
+            Gets the immutable component parameters.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledComponent.Kind">
+            <summary>
+            Gets the component kind.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.CompiledComponent.Nodes">
+            <summary>
+            Gets the compiled nodes in terminal order.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Compilation.ComponentGraphEdge">
+            <summary>
+            Represents one component edge in the compiled node multigraph.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.ComponentGraphEdge.#ctor(CircuitSimulator.Core.Model.ComponentId,System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Model.NodeId})">
+            <summary>
+            Initializes a graph edge.
+            </summary>
+            <param name="componentId">The component represented by the edge.</param>
+            <param name="incidentNodes">The incident nodes in component terminal order.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.ComponentGraphEdge.ComponentId">
+            <summary>
+            Gets the component represented by the edge.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.ComponentGraphEdge.IncidentNodes">
+            <summary>
+            Gets the incident nodes in component terminal order.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Compilation.ElectricalNode">
+            <summary>
+            Represents one compiled electrical node formed by ideal-wire-connected terminals.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.ElectricalNode.#ctor(CircuitSimulator.Core.Model.NodeId,System.Boolean,System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Model.TerminalId})">
+            <summary>
+            Initializes a new electrical node.
+            </summary>
+            <param name="id">The node identifier.</param>
+            <param name="isGround">Whether this node is the ground reference.</param>
+            <param name="terminalIds">The physical terminals belonging to this node.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.ElectricalNode.Id">
+            <summary>
+            Gets the node identifier.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.ElectricalNode.IsGround">
+            <summary>
+            Gets a value indicating whether this node is the ground reference node.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.ElectricalNode.TerminalIds">
+            <summary>
+            Gets the physical terminals in this node.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Compilation.Netlist">
+            <summary>
+            Immutable compiled terminal-to-node topology.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.Netlist.#ctor(System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Compilation.ElectricalNode},System.Collections.Generic.IReadOnlyDictionary{CircuitSimulator.Core.Model.TerminalId,CircuitSimulator.Core.Model.NodeId},CircuitSimulator.Core.Model.NodeId)">
+            <summary>
+            Initializes a new netlist.
+            </summary>
+            <param name="nodes">The compiled electrical nodes.</param>
+            <param name="terminalToNode">The terminal-to-node mapping.</param>
+            <param name="groundNodeId">The deterministic ground node identifier.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.Netlist.Nodes">
+            <summary>
+            Gets the compiled electrical nodes.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.Netlist.TerminalToNode">
+            <summary>
+            Gets the terminal-to-node mapping.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.Netlist.GroundNodeId">
+            <summary>
+            Gets the deterministic ground node identifier.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.Netlist.GetNode(CircuitSimulator.Core.Model.TerminalId)">
+            <summary>
+            Gets the compiled node for a physical terminal.
+            </summary>
+            <param name="terminalId">The terminal identifier.</param>
+            <returns>The compiled node identifier.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown when the terminal is not part of the netlist.</exception>
+        </member>
+        <member name="T:CircuitSimulator.Core.Compilation.NodeGraph">
+            <summary>
+            Represents the compiled circuit as a node/component multigraph.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.NodeGraph.#ctor(System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Compilation.ElectricalNode},System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Compilation.ComponentGraphEdge})">
+            <summary>
+            Initializes a node graph.
+            </summary>
+            <param name="nodes">The graph nodes.</param>
+            <param name="edges">The graph edges.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.NodeGraph.Nodes">
+            <summary>
+            Gets the graph nodes.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Compilation.NodeGraph.Edges">
+            <summary>
+            Gets graph edges. Parallel components remain distinct edges.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.NodeGraph.GetIncidentComponents(CircuitSimulator.Core.Model.NodeId)">
+            <summary>
+            Gets the components incident to a node.
+            </summary>
+            <param name="nodeId">The compiled node identifier.</param>
+            <returns>The incident component identifiers.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown when the node does not exist.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Compilation.NodeGraph.GetConnectedComponents">
+            <summary>
+            Computes connected components of the node multigraph.
+            </summary>
+            <returns>The connected node sets ordered by minimum node identifier.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.CapacitorParameters">
+            <summary>Immutable parameters for a capacitor.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.CapacitorParameters.#ctor(System.Double)">
+            <summary>Initializes capacitor parameters.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.CapacitorParameters.Capacitance">
+            <summary>Gets capacitance in farads.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.CapacitorParameters.Kind">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.ComponentKind">
+            <summary>
+            Describes the supported physical component kinds.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.ComponentKind.Resistor">
+            <summary>
+            A two-terminal resistor.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.ComponentKind.CurrentSource">
+            <summary>
+            A two-terminal independent current source.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.ComponentKind.VoltageSource">
+            <summary>
+            A two-terminal independent voltage source.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.ComponentKind.Capacitor">
+            <summary>
+            A two-terminal capacitor.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.ComponentKind.Inductor">
+            <summary>
+            A two-terminal inductor.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.ComponentKind.Diode">
+            <summary>
+            A two-terminal Shockley diode.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.CurrentSourceParameters">
+            <summary>
+            Immutable parameters for an independent current source.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.CurrentSourceParameters.Current">
+            <summary>
+            Gets the source current in amperes.
+            </summary>
+            <remarks>
+            Positive current flows from terminal 0, the positive/reference terminal, to terminal 1.
+            </remarks>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.CurrentSourceParameters.DcValue">
+            <summary>Gets the value used by DC operating-point analysis.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.CurrentSourceParameters.TransientWaveform">
+            <summary>Gets the waveform evaluated during transient analysis.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.CurrentSourceParameters.Kind">
+            <inheritdoc />
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.CurrentSourceParameters.#ctor(System.Double)">
+            <summary>
+            Initializes a new current-source parameter set.
+            </summary>
+            <param name="current">The finite current in amperes.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.CurrentSourceParameters.#ctor(System.Double,CircuitSimulator.Core.Components.SourceWaveform)">
+            <summary>Initializes current-source DC and transient excitation.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.DiodeModel">
+            <summary>Evaluates the Shockley diode model and its tangent linearization.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.DiodeModel.Evaluate(CircuitSimulator.Core.Components.DiodeParameters,System.Double)">
+            <summary>Evaluates current, conductance, and equivalent-source current at a diode voltage.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.DiodeLinearization">
+            <summary>Contains a diode value and its affine tangent model.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.DiodeLinearization.#ctor(System.Double,System.Double,System.Double)">
+            <summary>Contains a diode value and its affine tangent model.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.DiodeParameters">
+            <summary>Immutable Shockley diode parameters.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.DiodeParameters.DefaultThermalVoltage">
+            <summary>Default thermal voltage at approximately 300 K.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.DiodeParameters.#ctor(System.Double,System.Double,System.Double)">
+            <summary>Initializes diode parameters.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.DiodeParameters.SaturationCurrent">
+            <summary>Gets reverse saturation current in amperes.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.DiodeParameters.IdealityFactor">
+            <summary>Gets the emission ideality factor.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.DiodeParameters.ThermalVoltage">
+            <summary>Gets thermal voltage in volts.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.DiodeParameters.Kind">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.IComponentParameters">
+            <summary>
+            Describes immutable parameters for a component definition.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.IComponentParameters.Kind">
+            <summary>
+            Gets the component kind represented by these parameters.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.InductorParameters">
+            <summary>Immutable parameters for an inductor.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.InductorParameters.#ctor(System.Double)">
+            <summary>Initializes inductor parameters.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.InductorParameters.Inductance">
+            <summary>Gets inductance in henries.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.InductorParameters.Kind">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.ResistorParameters">
+            <summary>
+            Immutable parameters for a resistor.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.ResistorParameters.Resistance">
+            <summary>
+            Gets the resistance in ohms.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.ResistorParameters.Kind">
+            <inheritdoc />
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.ResistorParameters.#ctor(System.Double)">
+            <summary>
+            Initializes a new resistor parameter set.
+            </summary>
+            <param name="resistance">The finite, strictly positive resistance in ohms.</param>
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.SourceWaveform">
+            <summary>
+            Defines an immutable time-domain independent-source waveform.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.SourceWaveform.GetValue(System.Double)">
+            <summary>
+            Evaluates the waveform at a finite time in seconds.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.SourceWaveform.ValidateTime(System.Double)">
+            <summary>Validates a waveform evaluation time.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.ConstantSourceWaveform">
+            <summary>Defines a constant time-domain source waveform.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.ConstantSourceWaveform.#ctor(System.Double)">
+            <summary>Initializes a constant waveform.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.ConstantSourceWaveform.Value">
+            <summary>Gets the constant waveform value.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.ConstantSourceWaveform.GetValue(System.Double)">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.SinusoidalSourceWaveform">
+            <summary>Defines an offset sinusoid for time-domain simulation.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.SinusoidalSourceWaveform.#ctor(System.Double,System.Double,System.Double,System.Double)">
+            <summary>Initializes a sinusoidal waveform.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.SinusoidalSourceWaveform.Offset">
+            <summary>Gets the waveform offset.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.SinusoidalSourceWaveform.Amplitude">
+            <summary>Gets the peak amplitude.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.SinusoidalSourceWaveform.FrequencyHz">
+            <summary>Gets the frequency in hertz.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.SinusoidalSourceWaveform.PhaseRadians">
+            <summary>Gets the phase in radians.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.SinusoidalSourceWaveform.GetValue(System.Double)">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.VoltageSourceParameters">
+            <summary>
+            Immutable parameters for an independent voltage source.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.VoltageSourceParameters.Voltage">
+            <summary>
+            Gets the source voltage in volts.
+            </summary>
+            <remarks>
+            The source constrains terminal 0 minus terminal 1 to this voltage.
+            </remarks>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.VoltageSourceParameters.DcValue">
+            <summary>Gets the value used by DC operating-point analysis.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.VoltageSourceParameters.TransientWaveform">
+            <summary>Gets the waveform evaluated during transient analysis.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.VoltageSourceParameters.Kind">
+            <inheritdoc />
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.VoltageSourceParameters.#ctor(System.Double)">
+            <summary>
+            Initializes a new voltage-source parameter set.
+            </summary>
+            <param name="voltage">The finite voltage in volts.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.VoltageSourceParameters.#ctor(System.Double,CircuitSimulator.Core.Components.SourceWaveform)">
+            <summary>Initializes voltage-source DC and transient excitation.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.DenseMnaSystemBuilder">
+            <summary>
+            Dense in-memory MNA system builder.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.DenseMnaSystemBuilder.#ctor(System.Int32)">
+            <summary>
+            Initializes a dense MNA builder.
+            </summary>
+            <param name="dimension">The non-negative matrix dimension.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.DenseMnaSystemBuilder.Dimension">
+            <inheritdoc />
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.DenseMnaSystemBuilder.AddMatrix(CircuitSimulator.Core.Model.VariableIndex,CircuitSimulator.Core.Model.VariableIndex,System.Double)">
+            <inheritdoc />
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.DenseMnaSystemBuilder.AddRightHandSide(CircuitSimulator.Core.Model.VariableIndex,System.Double)">
+            <inheritdoc />
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.DenseMnaSystemBuilder.Build">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.IMnaSystemBuilder">
+            <summary>
+            Accumulates matrix and right-hand-side contributions for an MNA linear system.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.IMnaSystemBuilder.Dimension">
+            <summary>
+            Gets the square matrix dimension.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.IMnaSystemBuilder.AddMatrix(CircuitSimulator.Core.Model.VariableIndex,CircuitSimulator.Core.Model.VariableIndex,System.Double)">
+            <summary>
+            Adds a matrix contribution.
+            </summary>
+            <param name="row">The row index.</param>
+            <param name="column">The column index.</param>
+            <param name="value">The finite contribution to add.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.IMnaSystemBuilder.AddRightHandSide(CircuitSimulator.Core.Model.VariableIndex,System.Double)">
+            <summary>
+            Adds a right-hand-side contribution.
+            </summary>
+            <param name="row">The row index.</param>
+            <param name="value">The finite contribution to add.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.IMnaSystemBuilder.Build">
+            <summary>
+            Builds an immutable linear system snapshot.
+            </summary>
+            <returns>The assembled linear system.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.MnaAssembler">
+            <summary>Assembles DC and backward-Euler transient MNA systems.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaAssembler.#ctor">
+            <summary>Initializes an assembler with the built-in component handlers.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaAssembler.AssembleDc(CircuitSimulator.Core.Compilation.CompiledCircuit)">
+            <summary>Assembles a linear DC system.</summary>
+            <exception cref="T:CircuitSimulator.Core.Mna.MnaAssemblyException">Thrown when the circuit contains a nonlinear component.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaAssembler.AssembleDcLinearized(CircuitSimulator.Core.Compilation.CompiledCircuit,CircuitSimulator.Core.Mna.NonlinearStampContext)">
+            <summary>Assembles an affine DC system with nonlinear devices linearized around an iterate.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaAssembler.AssembleTransient(CircuitSimulator.Core.Mna.TransientStampContext)">
+            <summary>Assembles one backward-Euler transient system.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.MnaAssemblyException">
+            <summary>
+            Represents a failure while assembling an MNA linear system.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaAssemblyException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:CircuitSimulator.Core.Mna.MnaAssemblyException"/> class.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaAssemblyException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CircuitSimulator.Core.Mna.MnaAssemblyException"/> class.
+            </summary>
+            <param name="message">The exception message.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaAssemblyException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CircuitSimulator.Core.Mna.MnaAssemblyException"/> class.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.MnaLinearSystem">
+            <summary>
+            Immutable dense representation of an assembled MNA linear system using A * x = z.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaLinearSystem.#ctor(System.Double[0:,0:],System.Double[])">
+            <summary>
+            Initializes a new MNA linear system snapshot.
+            </summary>
+            <param name="matrix">The square matrix A.</param>
+            <param name="rightHandSide">The right-hand side z.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaLinearSystem.Dimension">
+            <summary>
+            Gets the square matrix dimension.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaLinearSystem.Matrix">
+            <summary>
+            Gets a defensive copy of the matrix A.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaLinearSystem.RightHandSide">
+            <summary>
+            Gets a defensive copy of the right-hand side z.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaLinearSystem.GetMatrixEntry(System.Int32,System.Int32)">
+            <summary>
+            Gets one matrix entry.
+            </summary>
+            <param name="row">The zero-based row.</param>
+            <param name="column">The zero-based column.</param>
+            <returns>The matrix entry.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaLinearSystem.GetRightHandSideEntry(System.Int32)">
+            <summary>
+            Gets one right-hand-side entry.
+            </summary>
+            <param name="row">The zero-based row.</param>
+            <returns>The right-hand-side entry.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.MnaStampContext">
+            <summary>
+            Provides immutable topology and variable mapping information to component stamps.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaStampContext.#ctor(CircuitSimulator.Core.Compilation.CompiledCircuit)">
+            <summary>
+            Initializes a stamp context.
+            </summary>
+            <param name="circuit">The compiled circuit.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaStampContext.Circuit">
+            <summary>
+            Gets the compiled circuit.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaStampContext.Variables">
+            <summary>
+            Gets the MNA variable map.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.MnaStamps">
+            <summary>
+            Provides reusable ground-aware MNA stamp helpers.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaStamps.StampConductance(CircuitSimulator.Core.Mna.IMnaSystemBuilder,System.Nullable{CircuitSimulator.Core.Model.VariableIndex},System.Nullable{CircuitSimulator.Core.Model.VariableIndex},System.Double)">
+            <summary>
+            Stamps a conductance between two node-voltage variables.
+            </summary>
+            <param name="builder">The MNA builder.</param>
+            <param name="positiveNodeVoltage">The positive node-voltage variable, or null for ground.</param>
+            <param name="negativeNodeVoltage">The negative node-voltage variable, or null for ground.</param>
+            <param name="conductance">The finite conductance in siemens.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaStamps.StampCurrentSource(CircuitSimulator.Core.Mna.IMnaSystemBuilder,System.Nullable{CircuitSimulator.Core.Model.VariableIndex},System.Nullable{CircuitSimulator.Core.Model.VariableIndex},System.Double)">
+            <summary>
+            Stamps a current source using positive current from positive node to negative node.
+            </summary>
+            <param name="builder">The MNA builder.</param>
+            <param name="positiveNodeVoltage">The positive node-voltage variable, or null for ground.</param>
+            <param name="negativeNodeVoltage">The negative node-voltage variable, or null for ground.</param>
+            <param name="current">The finite current in amperes.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaStamps.StampVoltageSource(CircuitSimulator.Core.Mna.IMnaSystemBuilder,System.Nullable{CircuitSimulator.Core.Model.VariableIndex},System.Nullable{CircuitSimulator.Core.Model.VariableIndex},CircuitSimulator.Core.Model.VariableIndex,System.Double)">
+            <summary>
+            Stamps an independent voltage source constraint.
+            </summary>
+            <param name="builder">The MNA builder.</param>
+            <param name="positiveNodeVoltage">The positive node-voltage variable, or null for ground.</param>
+            <param name="negativeNodeVoltage">The negative node-voltage variable, or null for ground.</param>
+            <param name="branchCurrent">The branch-current variable.</param>
+            <param name="voltage">The finite voltage in volts.</param>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.MnaVariable">
+            <summary>
+            Describes one allocated MNA unknown.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaVariable.#ctor(CircuitSimulator.Core.Model.VariableIndex,CircuitSimulator.Core.Mna.MnaVariableKind,System.Nullable{CircuitSimulator.Core.Model.NodeId},System.Nullable{CircuitSimulator.Core.Model.ComponentId},System.String)">
+            <summary>
+            Initializes MNA variable metadata.
+            </summary>
+            <param name="index">The variable index in the global unknown vector.</param>
+            <param name="kind">The variable kind.</param>
+            <param name="nodeId">The related node for node-voltage variables.</param>
+            <param name="componentId">The related component for branch-current variables.</param>
+            <param name="name">The diagnostic variable name.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaVariable.Index">
+            <summary>
+            Gets the variable index in the global unknown vector.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaVariable.Kind">
+            <summary>
+            Gets the variable kind.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaVariable.NodeId">
+            <summary>
+            Gets the related node for node-voltage variables.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaVariable.ComponentId">
+            <summary>
+            Gets the related component for branch-current variables.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaVariable.Name">
+            <summary>
+            Gets the diagnostic variable name.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.MnaVariableKind">
+            <summary>
+            Describes the kind of an allocated MNA unknown.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Mna.MnaVariableKind.NodeVoltage">
+            <summary>
+            A non-ground node voltage unknown.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Mna.MnaVariableKind.BranchCurrent">
+            <summary>
+            A branch-current unknown for an ideal voltage source.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Mna.MnaVariableKind.InternalState">
+            <summary>
+            A reserved future internal state unknown.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.MnaVariableMap">
+            <summary>
+            Provides deterministic mappings between compiled circuit entities and MNA unknown indexes.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaVariableMap.Dimension">
+            <summary>
+            Gets the MNA system dimension.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.MnaVariableMap.Variables">
+            <summary>
+            Gets allocated variables in deterministic unknown-vector order.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaVariableMap.Create(System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Compilation.ElectricalNode},System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Compilation.CompiledComponent})">
+            <summary>
+            Creates a deterministic variable map.
+            </summary>
+            <param name="nodes">The compiled nodes.</param>
+            <param name="components">The compiled components.</param>
+            <returns>The variable map.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaVariableMap.GetNodeVoltageIndex(CircuitSimulator.Core.Model.NodeId)">
+            <summary>
+            Gets the node-voltage variable for a compiled node.
+            </summary>
+            <param name="nodeId">The compiled node identifier.</param>
+            <returns>The variable index, or <see langword="null"/> for ground.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaVariableMap.GetBranchCurrentIndex(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>
+            Gets the branch-current variable for a component.
+            </summary>
+            <param name="componentId">The component identifier.</param>
+            <returns>The branch-current variable index.</returns>
+            <exception cref="T:CircuitSimulator.Core.Mna.MnaAssemblyException">Thrown when the component has no branch-current variable.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.MnaVariableMap.TryGetBranchCurrentIndex(CircuitSimulator.Core.Model.ComponentId,CircuitSimulator.Core.Model.VariableIndex@)">
+            <summary>
+            Attempts to get the branch-current variable for a component.
+            </summary>
+            <param name="componentId">The component identifier.</param>
+            <param name="index">The branch-current variable index when present.</param>
+            <returns><see langword="true"/> when a branch-current variable exists.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.NonlinearStampContext">
+            <summary>Provides a finite Newton iterate to nonlinear DC component stamps.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.NonlinearStampContext.#ctor(CircuitSimulator.Core.Compilation.CompiledCircuit,System.Collections.Generic.IReadOnlyList{System.Double})">
+            <summary>Initializes a nonlinear stamp context.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.NonlinearStampContext.Circuit">
+            <summary>Gets the compiled circuit.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.NonlinearStampContext.SolutionEstimate">
+            <summary>Gets the immutable solution estimate.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Mna.TransientStampContext">
+            <summary>Provides time, committed history, and an optional nonlinear iterate to transient stamps.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Mna.TransientStampContext.#ctor(CircuitSimulator.Core.Compilation.CompiledCircuit,CircuitSimulator.Core.Simulation.SimulationState,System.Double,System.Double,System.Collections.Generic.IReadOnlyList{System.Double})">
+            <summary>Initializes a transient stamp context.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.TransientStampContext.Circuit">
+            <summary>Gets the compiled circuit.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.TransientStampContext.State">
+            <summary>Gets committed component state.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.TransientStampContext.Time">
+            <summary>Gets the target sample time.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.TransientStampContext.TimeStep">
+            <summary>Gets the current integration step.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Mna.TransientStampContext.SolutionEstimate">
+            <summary>Gets the nonlinear solution estimate when present.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.Circuit">
+            <summary>
+            Immutable physical circuit definition containing components, terminals, ideal wires, and ground markers.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Circuit.#ctor(System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Model.ComponentDefinition},System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Model.TerminalDefinition},System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Model.WireDefinition},System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Model.TerminalId})">
+            <summary>
+            Initializes a new immutable circuit snapshot.
+            </summary>
+            <param name="components">The component definitions.</param>
+            <param name="terminals">The terminal definitions.</param>
+            <param name="wires">The ideal wire definitions.</param>
+            <param name="groundTerminals">The terminals marked as ground.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.Circuit.Components">
+            <summary>
+            Gets the immutable component definitions.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.Circuit.Terminals">
+            <summary>
+            Gets the immutable terminal definitions.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.Circuit.Wires">
+            <summary>
+            Gets the immutable ideal wire definitions.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.Circuit.GroundTerminals">
+            <summary>
+            Gets the terminal identifiers marked as ground.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Circuit.GetComponent(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>
+            Gets a component definition by identifier.
+            </summary>
+            <param name="componentId">The component identifier.</param>
+            <returns>The matching component definition.</returns>
+            <exception cref="T:CircuitSimulator.Core.Model.CircuitModelException">Thrown when the component does not exist.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Circuit.GetTerminal(CircuitSimulator.Core.Model.TerminalId)">
+            <summary>
+            Gets a terminal definition by identifier.
+            </summary>
+            <param name="terminalId">The terminal identifier.</param>
+            <returns>The matching terminal definition.</returns>
+            <exception cref="T:CircuitSimulator.Core.Model.CircuitModelException">Thrown when the terminal does not exist.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Circuit.ContainsTerminal(CircuitSimulator.Core.Model.TerminalId)">
+            <summary>
+            Determines whether a terminal exists in the circuit.
+            </summary>
+            <param name="terminalId">The terminal identifier.</param>
+            <returns><see langword="true"/> when the terminal exists; otherwise <see langword="false"/>.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.CircuitBuilder">
+            <summary>
+            Builds immutable circuit snapshots with deterministic component and terminal identifiers.
+            </summary>
+            <remarks>
+            All two-terminal components use terminal 0 as positive/reference and terminal 1 as negative.
+            Self-wires are treated as no-ops, and duplicate wires are accepted because topology compilation collapses them deterministically.
+            </remarks>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddResistor(System.String,System.Double)">
+            <summary>
+            Adds a two-terminal resistor.
+            </summary>
+            <param name="name">The unique component name.</param>
+            <param name="resistance">The finite, strictly positive resistance in ohms.</param>
+            <returns>A handle containing the component identifier and ordered terminals.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddCurrentSource(System.String,System.Double)">
+            <summary>
+            Adds a two-terminal independent current source.
+            </summary>
+            <param name="name">The unique component name.</param>
+            <param name="current">The finite current in amperes, positive from positive terminal to negative terminal.</param>
+            <returns>A handle containing the component identifier and ordered terminals.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddVoltageSource(System.String,System.Double)">
+            <summary>
+            Adds a two-terminal independent voltage source.
+            </summary>
+            <param name="name">The unique component name.</param>
+            <param name="voltage">The finite voltage in volts, positive terminal minus negative terminal.</param>
+            <returns>A handle containing the component identifier and ordered terminals.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddSinusoidalVoltageSource(System.String,System.Double,System.Double,System.Double,System.Double)">
+            <summary>Adds an independent sinusoidal voltage source.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddSinusoidalCurrentSource(System.String,System.Double,System.Double,System.Double,System.Double)">
+            <summary>Adds an independent sinusoidal current source.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddCapacitor(System.String,System.Double)">
+            <summary>Adds a two-terminal capacitor.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddInductor(System.String,System.Double)">
+            <summary>Adds a two-terminal inductor.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddDiode(System.String,System.Double,System.Double,System.Double)">
+            <summary>Adds a two-terminal Shockley diode.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.Connect(CircuitSimulator.Core.Model.TerminalId,CircuitSimulator.Core.Model.TerminalId)">
+            <summary>
+            Connects two terminals with an ideal wire.
+            </summary>
+            <param name="first">The first terminal.</param>
+            <param name="second">The second terminal.</param>
+            <exception cref="T:CircuitSimulator.Core.Model.CircuitModelException">Thrown when either terminal is not owned by this builder.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.Connect(CircuitSimulator.Core.Model.TerminalId[])">
+            <summary>
+            Connects a set of terminals onto the same ideal net.
+            </summary>
+            <param name="terminals">The terminals to connect.</param>
+            <exception cref="T:CircuitSimulator.Core.Model.CircuitModelException">Thrown when any terminal is not owned by this builder.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.MarkAsGround(CircuitSimulator.Core.Model.TerminalId)">
+            <summary>
+            Marks a terminal as the circuit ground reference.
+            </summary>
+            <param name="terminal">The terminal to mark as ground.</param>
+            <exception cref="T:CircuitSimulator.Core.Model.CircuitModelException">Thrown when the terminal is not owned by this builder.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.Build">
+            <summary>
+            Builds an immutable circuit snapshot that is unaffected by later builder mutations.
+            </summary>
+            <returns>The immutable circuit snapshot.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.CircuitModelException">
+            <summary>
+            Represents an error in the physical circuit model or builder API.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitModelException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:CircuitSimulator.Core.Model.CircuitModelException"/> class.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitModelException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CircuitSimulator.Core.Model.CircuitModelException"/> class.
+            </summary>
+            <param name="message">The exception message.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitModelException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:CircuitSimulator.Core.Model.CircuitModelException"/> class.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.ComponentDefinition">
+            <summary>
+            Defines an immutable physical component and its terminal ownership.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.ComponentDefinition.#ctor(CircuitSimulator.Core.Model.ComponentId,System.String,System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Model.TerminalId},CircuitSimulator.Core.Components.IComponentParameters)">
+            <summary>
+            Initializes a new component definition.
+            </summary>
+            <param name="id">The component identifier.</param>
+            <param name="name">The component name.</param>
+            <param name="terminalIds">The terminal identifiers in local terminal order.</param>
+            <param name="parameters">The immutable component parameters.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.ComponentDefinition.Id">
+            <summary>
+            Gets the component identifier.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.ComponentDefinition.Name">
+            <summary>
+            Gets the component name.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.ComponentDefinition.TerminalIds">
+            <summary>
+            Gets the terminal identifiers in local terminal order.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.ComponentDefinition.Parameters">
+            <summary>
+            Gets the immutable component parameters.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.ComponentDefinition.Kind">
+            <summary>
+            Gets the component kind.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.ComponentId">
+            <summary>
+            Identifies a component definition within a circuit.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.ComponentId.Value">
+            <summary>
+            Gets the non-negative numeric identifier value.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.ComponentId.#ctor(System.Int32)">
+            <summary>
+            Initializes a new component identifier.
+            </summary>
+            <param name="value">The non-negative identifier value.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="value"/> is negative.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.ComponentId.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.TerminalId">
+            <summary>
+            Identifies a physical terminal definition within a circuit.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.TerminalId.Value">
+            <summary>
+            Gets the non-negative numeric identifier value.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.TerminalId.#ctor(System.Int32)">
+            <summary>
+            Initializes a new terminal identifier.
+            </summary>
+            <param name="value">The non-negative identifier value.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="value"/> is negative.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.TerminalId.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.NodeId">
+            <summary>
+            Identifies a compiled electrical node.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.NodeId.Ground">
+            <summary>
+            Gets the deterministic ground node identifier.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.NodeId.Value">
+            <summary>
+            Gets the non-negative numeric identifier value.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.NodeId.#ctor(System.Int32)">
+            <summary>
+            Initializes a new node identifier.
+            </summary>
+            <param name="value">The non-negative identifier value.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="value"/> is negative.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.NodeId.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.VariableIndex">
+            <summary>
+            Identifies a row or column in an assembled MNA linear system.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.VariableIndex.Value">
+            <summary>
+            Gets the non-negative numeric index value.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.VariableIndex.#ctor(System.Int32)">
+            <summary>
+            Initializes a new MNA variable index.
+            </summary>
+            <param name="value">The non-negative index value.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="value"/> is negative.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.VariableIndex.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.BranchVariableId">
+            <summary>
+            Identifies an allocated branch-current unknown.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BranchVariableId.Value">
+            <summary>
+            Gets the non-negative numeric identifier value.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BranchVariableId.#ctor(System.Int32)">
+            <summary>
+            Initializes a new branch-current identifier.
+            </summary>
+            <param name="value">The non-negative identifier value.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="value"/> is negative.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BranchVariableId.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.TerminalDefinition">
+            <summary>
+            Defines one physical terminal owned by a component.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.TerminalDefinition.#ctor(CircuitSimulator.Core.Model.TerminalId,CircuitSimulator.Core.Model.ComponentId,System.Int32,System.String)">
+            <summary>
+            Initializes a new terminal definition.
+            </summary>
+            <param name="id">The terminal identifier.</param>
+            <param name="ownerComponentId">The owning component identifier.</param>
+            <param name="localIndex">The zero-based local terminal index.</param>
+            <param name="name">The terminal name.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="name"/> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when <paramref name="localIndex"/> is negative.</exception>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.TerminalDefinition.Id">
+            <summary>
+            Gets the terminal identifier.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.TerminalDefinition.OwnerComponentId">
+            <summary>
+            Gets the component that owns this terminal.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.TerminalDefinition.LocalIndex">
+            <summary>
+            Gets the terminal index within the owner component.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.TerminalDefinition.Name">
+            <summary>
+            Gets the terminal display name.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.TwoTerminalComponentHandle">
+            <summary>
+            Provides stable access to a two-terminal component and its ordered terminals.
+            </summary>
+            <param name="ComponentId">The component identifier.</param>
+            <param name="Positive">Terminal 0, the positive/reference terminal.</param>
+            <param name="Negative">Terminal 1, the negative terminal.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.TwoTerminalComponentHandle.#ctor(CircuitSimulator.Core.Model.ComponentId,CircuitSimulator.Core.Model.TerminalId,CircuitSimulator.Core.Model.TerminalId)">
+            <summary>
+            Provides stable access to a two-terminal component and its ordered terminals.
+            </summary>
+            <param name="ComponentId">The component identifier.</param>
+            <param name="Positive">Terminal 0, the positive/reference terminal.</param>
+            <param name="Negative">Terminal 1, the negative terminal.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.TwoTerminalComponentHandle.ComponentId">
+            <summary>The component identifier.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.TwoTerminalComponentHandle.Positive">
+            <summary>Terminal 0, the positive/reference terminal.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.TwoTerminalComponentHandle.Negative">
+            <summary>Terminal 1, the negative terminal.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.WireDefinition">
+            <summary>
+            Defines an ideal zero-resistance wire between two physical terminals.
+            </summary>
+            <param name="First">The first terminal.</param>
+            <param name="Second">The second terminal.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.WireDefinition.#ctor(CircuitSimulator.Core.Model.TerminalId,CircuitSimulator.Core.Model.TerminalId)">
+            <summary>
+            Defines an ideal zero-resistance wire between two physical terminals.
+            </summary>
+            <param name="First">The first terminal.</param>
+            <param name="Second">The second terminal.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.WireDefinition.First">
+            <summary>The first terminal.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.WireDefinition.Second">
+            <summary>The second terminal.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Numerics.ILinearSystemSolver">
+            <summary>
+            Solves immutable MNA linear systems.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Numerics.ILinearSystemSolver.Solve(CircuitSimulator.Core.Mna.MnaLinearSystem)">
+            <summary>
+            Solves the linear system A * x = z.
+            </summary>
+            <param name="system">The linear system.</param>
+            <returns>A new solution vector.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Numerics.MathNetLinearSystemSolver">
+            <summary>
+            Solves MNA systems through Math.NET Numerics while preserving domain-layer array immutability.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Numerics.MathNetLinearSystemSolver.#ctor(System.Double)">
+            <summary>
+            Initializes a Math.NET linear system solver.
+            </summary>
+            <param name="pivotTolerance">The non-negative pivot tolerance for singular detection.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Numerics.MathNetLinearSystemSolver.PivotTolerance">
+            <summary>
+            Gets the pivot tolerance.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Numerics.MathNetLinearSystemSolver.Solve(CircuitSimulator.Core.Mna.MnaLinearSystem)">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Numerics.NumericalConstants">
+            <summary>
+            Central numerical tolerances used by solvers and tests.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Numerics.NumericalConstants.DefaultPivotTolerance">
+            <summary>
+            Default pivot tolerance for singular-matrix detection.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Numerics.NumericalConstants.DefaultComparisonTolerance">
+            <summary>
+            Default comparison tolerance for public examples and tests.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Numerics.SingularMatrixException">
+            <summary>
+            Represents a singular or numerically unusable linear system.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Numerics.SingularMatrixException.#ctor">
+            <summary>
+            Initializes a new singular matrix exception.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Numerics.SingularMatrixException.#ctor(System.String)">
+            <summary>
+            Initializes a new singular matrix exception.
+            </summary>
+            <param name="message">The exception message.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Numerics.SingularMatrixException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new singular matrix exception.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="T:CircuitSimulator.Core.Results.BranchCurrentResult">
+            <summary>
+            Stores the solved branch current of an ideal voltage source.
+            </summary>
+            <param name="ComponentId">The component identifier.</param>
+            <param name="Current">The branch current in amperes, positive from terminal 0 to terminal 1.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.BranchCurrentResult.#ctor(CircuitSimulator.Core.Model.ComponentId,System.Double)">
+            <summary>
+            Stores the solved branch current of an ideal voltage source.
+            </summary>
+            <param name="ComponentId">The component identifier.</param>
+            <param name="Current">The branch current in amperes, positive from terminal 0 to terminal 1.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.BranchCurrentResult.ComponentId">
+            <summary>The component identifier.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.BranchCurrentResult.Current">
+            <summary>The branch current in amperes, positive from terminal 0 to terminal 1.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Results.DcOperatingPointResult">
+            <summary>
+            Immutable result of a linear DC operating-point solve.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.DcOperatingPointResult.#ctor(CircuitSimulator.Core.Compilation.CompiledCircuit,CircuitSimulator.Core.Mna.MnaLinearSystem,System.Double[])">
+            <summary>
+            Initializes a new DC operating-point result.
+            </summary>
+            <param name="circuit">The compiled circuit.</param>
+            <param name="linearSystem">The assembled linear system.</param>
+            <param name="solution">The solved unknown vector.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.DcOperatingPointResult.CompiledCircuit">
+            <summary>
+            Gets the compiled circuit used for this solve.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.DcOperatingPointResult.LinearSystem">
+            <summary>
+            Gets the assembled MNA linear system.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.DcOperatingPointResult.Solution">
+            <summary>
+            Gets the solved unknown vector in MNA variable order.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.DcOperatingPointResult.NodeVoltages">
+            <summary>
+            Gets solved node voltages, including ground at 0 V.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.DcOperatingPointResult.BranchCurrents">
+            <summary>
+            Gets solved branch currents for voltage sources.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.DcOperatingPointResult.GetNodeVoltage(CircuitSimulator.Core.Model.NodeId)">
+            <summary>
+            Gets the voltage of a compiled node relative to ground.
+            </summary>
+            <param name="nodeId">The compiled node identifier.</param>
+            <returns>The node voltage in volts.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.DcOperatingPointResult.GetTerminalVoltage(CircuitSimulator.Core.Model.TerminalId)">
+            <summary>
+            Gets the voltage of a physical terminal relative to ground.
+            </summary>
+            <param name="terminalId">The terminal identifier.</param>
+            <returns>The terminal voltage in volts.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.DcOperatingPointResult.GetBranchCurrent(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>
+            Gets the branch current for a voltage source.
+            </summary>
+            <param name="componentId">The voltage-source component identifier.</param>
+            <returns>The branch current in amperes, positive from terminal 0 to terminal 1.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.DcOperatingPointResult.TryGetBranchCurrent(CircuitSimulator.Core.Model.ComponentId,System.Double@)">
+            <summary>
+            Attempts to get the branch current for a component.
+            </summary>
+            <param name="componentId">The component identifier.</param>
+            <param name="current">The branch current when one exists.</param>
+            <returns><see langword="true"/> when the component has a branch-current variable.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.DcOperatingPointResult.GetComponentVoltage(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>
+            Gets the component voltage using terminal 0 minus terminal 1.
+            </summary>
+            <param name="componentId">The component identifier.</param>
+            <returns>The component voltage in volts.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.DcOperatingPointResult.GetComponentCurrent(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>
+            Gets the component current using the positive-to-negative terminal convention.
+            </summary>
+            <param name="componentId">The component identifier.</param>
+            <returns>The component current in amperes.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Results.NodeVoltageResult">
+            <summary>
+            Stores the solved voltage of one compiled electrical node.
+            </summary>
+            <param name="NodeId">The compiled node identifier.</param>
+            <param name="Voltage">The node voltage relative to ground, in volts.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.NodeVoltageResult.#ctor(CircuitSimulator.Core.Model.NodeId,System.Double)">
+            <summary>
+            Stores the solved voltage of one compiled electrical node.
+            </summary>
+            <param name="NodeId">The compiled node identifier.</param>
+            <param name="Voltage">The node voltage relative to ground, in volts.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.NodeVoltageResult.NodeId">
+            <summary>The compiled node identifier.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.NodeVoltageResult.Voltage">
+            <summary>The node voltage relative to ground, in volts.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Results.TransientSample">
+            <summary>Immutable solved sample from a backward-Euler transient simulation.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.TransientSample.CompiledCircuit">
+            <summary>Gets the compiled circuit used by this sample.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.TransientSample.Time">
+            <summary>Gets the sample time in seconds.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.TransientSample.TimeStep">
+            <summary>Gets the integration step that produced this sample.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.TransientSample.Solution">
+            <summary>Gets the solved MNA vector in deterministic variable order.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.TransientSample.GetNodeVoltage(CircuitSimulator.Core.Model.NodeId)">
+            <summary>Gets a node voltage relative to ground.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.TransientSample.GetTerminalVoltage(CircuitSimulator.Core.Model.TerminalId)">
+            <summary>Gets a terminal voltage relative to ground.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.TransientSample.GetComponentVoltage(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>Gets terminal-0 voltage minus terminal-1 voltage for a component.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.TransientSample.GetComponentCurrent(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>Gets positive-to-negative current for a component at this sample.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.TransientSample.GetBranchCurrent(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>Gets a solved voltage-source or inductor branch current.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Results.TransientSimulationResult">
+            <summary>Immutable result of a completed transient simulation.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Results.TransientSimulationResult.#ctor(CircuitSimulator.Core.Compilation.CompiledCircuit,CircuitSimulator.Core.Simulation.TransientSimulationOptions,System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Results.TransientSample})">
+            <summary>Initializes a transient result snapshot.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.TransientSimulationResult.CompiledCircuit">
+            <summary>Gets the reused compiled circuit.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.TransientSimulationResult.Options">
+            <summary>Gets the simulation settings.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Results.TransientSimulationResult.Samples">
+            <summary>Gets accepted samples in ascending time order.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.DcOperatingPointSolver">
+            <summary>
+            Solves linear DC operating points for compiled circuits.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.DcOperatingPointSolver.#ctor(CircuitSimulator.Core.Numerics.ILinearSystemSolver,CircuitSimulator.Core.Mna.MnaAssembler,CircuitSimulator.Core.Simulation.NewtonRaphsonOptions)">
+            <summary>
+            Initializes a DC operating-point solver.
+            </summary>
+            <param name="linearSystemSolver">The linear solver. When omitted, Math.NET is used.</param>
+            <param name="assembler">The MNA assembler. When omitted, the built-in DC assembler is used.</param>
+            <param name="newtonOptions">Nonlinear convergence options. When omitted, production defaults are used.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.DcOperatingPointSolver.Solve(CircuitSimulator.Core.Model.Circuit)">
+            <summary>
+            Compiles and solves a physical circuit.
+            </summary>
+            <param name="circuit">The physical circuit.</param>
+            <returns>The DC operating-point result.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.DcOperatingPointSolver.Solve(CircuitSimulator.Core.Compilation.CompiledCircuit)">
+            <summary>
+            Solves an already compiled circuit.
+            </summary>
+            <param name="circuit">The compiled circuit.</param>
+            <returns>The DC operating-point result.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.NewtonRaphsonOptions">
+            <summary>Configures Newton-Raphson convergence and diode voltage damping.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.NewtonRaphsonOptions.Default">
+            <summary>Gets production defaults for nonlinear circuit simulation.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.NewtonRaphsonOptions.#ctor(System.Int32,System.Double,System.Double,System.Double,System.Double)">
+            <summary>Initializes Newton-Raphson options.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.NewtonRaphsonOptions.MaximumIterations">
+            <summary>Gets the maximum iteration count.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.NewtonRaphsonOptions.RelativeTolerance">
+            <summary>Gets the relative correction tolerance.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.NewtonRaphsonOptions.VoltageAbsoluteTolerance">
+            <summary>Gets the node-voltage absolute correction tolerance.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.NewtonRaphsonOptions.CurrentAbsoluteTolerance">
+            <summary>Gets the branch-current absolute correction tolerance.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.NewtonRaphsonOptions.MaximumDiodeVoltageStep">
+            <summary>Gets the maximum diode-voltage change admitted by one iteration.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.NewtonRaphsonSolver">
+            <summary>Solves affine Newton linearizations using the configured real linear-system solver.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.NewtonRaphsonSolver.#ctor(CircuitSimulator.Core.Numerics.ILinearSystemSolver)">
+            <summary>Initializes a Newton-Raphson solver.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.NewtonRaphsonSolver.Solve(CircuitSimulator.Core.Mna.MnaVariableMap,System.Func{System.Collections.Generic.IReadOnlyList{System.Double},CircuitSimulator.Core.Mna.MnaLinearSystem},System.Collections.Generic.IReadOnlyList{System.Double},CircuitSimulator.Core.Simulation.NewtonRaphsonOptions,System.Func{System.Collections.Generic.IReadOnlyList{System.Double},System.Collections.Generic.IReadOnlyList{System.Double},System.Double[]},System.Threading.CancellationToken)">
+            <summary>Solves a nonlinear system represented by affine tangent systems.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.NonlinearConvergenceException">
+            <summary>Thrown when a nonlinear solve cannot satisfy its convergence criteria.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.NonlinearConvergenceException.#ctor(System.String,System.Int32,System.Double)">
+            <summary>Initializes a nonlinear convergence failure.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.NonlinearConvergenceException.#ctor(System.String,System.Int32,System.Double,System.Double,System.Exception)">
+            <summary>Initializes a transient nonlinear convergence failure while preserving its cause.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.NonlinearConvergenceException.IterationCount">
+            <summary>Gets the number of completed Newton iterations.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.NonlinearConvergenceException.MaximumCorrection">
+            <summary>Gets the final maximum absolute correction.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.NonlinearConvergenceException.SimulationTime">
+            <summary>Gets the transient time associated with the failure, when applicable.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.RealtimeSimulationOptions">
+            <summary>Defines ongoing fixed-step realtime simulation settings.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.RealtimeSimulationOptions.#ctor(System.Double,CircuitSimulator.Core.Simulation.TransientInitialConditions,CircuitSimulator.Core.Simulation.NewtonRaphsonOptions)">
+            <summary>Initializes ongoing realtime simulation settings.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.RealtimeSimulationOptions.TimeStep">
+            <summary>Gets the fixed backward-Euler integration step in seconds.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.RealtimeSimulationOptions.InitialConditions">
+            <summary>Gets explicit reactive initial conditions.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.RealtimeSimulationOptions.NewtonOptions">
+            <summary>Gets nonlinear convergence options.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.RealtimeSimulationSession">
+            <summary>
+            Owns one ongoing fixed-step transient run and can advance it manually or at realtime wall-clock pace.
+            </summary>
+            <remarks>
+            A session is bound to one immutable compiled circuit. It supports one active operation at a time and
+            does not retain sample history beyond <see cref="P:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.LatestSample"/>.
+            </remarks>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.#ctor(CircuitSimulator.Core.Model.Circuit,CircuitSimulator.Core.Simulation.RealtimeSimulationOptions,CircuitSimulator.Core.Numerics.ILinearSystemSolver,CircuitSimulator.Core.Mna.MnaAssembler)">
+            <summary>Initializes a realtime session by compiling a physical circuit once.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.#ctor(CircuitSimulator.Core.Compilation.CompiledCircuit,CircuitSimulator.Core.Simulation.RealtimeSimulationOptions,CircuitSimulator.Core.Numerics.ILinearSystemSolver,CircuitSimulator.Core.Mna.MnaAssembler)">
+            <summary>Initializes a realtime session for an already compiled circuit.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.CompiledCircuit">
+            <summary>Gets the immutable compiled circuit used for this run.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.Options">
+            <summary>Gets the ongoing simulation settings.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.CurrentTime">
+            <summary>Gets the time of the latest committed step, or zero before the first step.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.LatestSample">
+            <summary>Gets the latest committed sample, or <see langword="null"/> before the first step.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.Advance(System.Threading.CancellationToken)">
+            <summary>
+            Immediately advances exactly one fixed integration step without wall-clock pacing.
+            </summary>
+            <remarks>
+            A variable-frame-rate application can maintain an elapsed-time accumulator and call this method
+            zero, one, or multiple times per rendered frame. It must preserve any fractional remainder.
+            </remarks>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.RunAsync(System.Threading.CancellationToken)">
+            <summary>
+            Streams fixed-step samples indefinitely at best-effort 1x wall-clock pace.
+            </summary>
+            <remarks>
+            Absolute monotonic deadlines prevent scheduling drift. If solving falls behind, steps run without
+            additional delay until caught up; integration steps are never enlarged or skipped. Disposing or
+            cancelling the enumeration pauses the session at its last committed sample. A later enumeration
+            resumes from that state with a new wall-clock anchor.
+            </remarks>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.SimulationException">
+            <summary>
+            Represents a simulation failure outside of topology compilation.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.SimulationException.#ctor">
+            <summary>
+            Initializes a new simulation exception.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.SimulationException.#ctor(System.String)">
+            <summary>
+            Initializes a new simulation exception.
+            </summary>
+            <param name="message">The exception message.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.SimulationException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new simulation exception.
+            </summary>
+            <param name="message">The exception message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.IComponentState">
+            <summary>Marks state owned by one simulation run.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.CapacitorState">
+            <summary>Committed backward-Euler history for a capacitor.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.CapacitorState.#ctor(System.Double,System.Double)">
+            <summary>Committed backward-Euler history for a capacitor.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.InductorState">
+            <summary>Committed backward-Euler history for an inductor.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.InductorState.#ctor(System.Double)">
+            <summary>Committed backward-Euler history for an inductor.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.SimulationState">
+            <summary>Owns committed component history for one transient simulation run.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.SimulationState.Circuit">
+            <summary>Gets the compiled circuit associated with this state.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.SimulationState.Create(CircuitSimulator.Core.Compilation.CompiledCircuit,CircuitSimulator.Core.Simulation.TransientInitialConditions)">
+            <summary>Creates independent state for a compiled circuit.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.SimulationState.GetCapacitorState(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>Gets committed capacitor history.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.SimulationState.GetInductorState(CircuitSimulator.Core.Model.ComponentId)">
+            <summary>Gets committed inductor history.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.TransientInitialConditions">
+            <summary>Defines explicit reactive initial conditions for one transient run.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.TransientInitialConditions.Zero">
+            <summary>Gets an initial-condition set in which every unspecified value is zero.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.TransientInitialConditions.#ctor(System.Collections.Generic.IReadOnlyDictionary{CircuitSimulator.Core.Model.ComponentId,System.Double},System.Collections.Generic.IReadOnlyDictionary{CircuitSimulator.Core.Model.ComponentId,System.Double})">
+            <summary>Initializes an immutable initial-condition set.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.TransientInitialConditions.CapacitorVoltages">
+            <summary>Gets initial capacitor voltages, positive terminal minus negative terminal.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.TransientInitialConditions.InductorCurrents">
+            <summary>Gets initial inductor currents, positive terminal to negative terminal.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.TransientSimulationOptions">
+            <summary>Defines fixed-step backward-Euler transient simulation settings.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.TransientSimulationOptions.#ctor(System.Double,System.Double,System.Double,CircuitSimulator.Core.Simulation.TransientInitialConditions,CircuitSimulator.Core.Simulation.NewtonRaphsonOptions)">
+            <summary>Initializes transient simulation settings.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.TransientSimulationOptions.StartTime">
+            <summary>Gets the initial time in seconds.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.TransientSimulationOptions.StopTime">
+            <summary>Gets the final time in seconds.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.TransientSimulationOptions.TimeStep">
+            <summary>Gets the preferred fixed time step in seconds.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.TransientSimulationOptions.InitialConditions">
+            <summary>Gets explicit reactive initial conditions.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Simulation.TransientSimulationOptions.NewtonOptions">
+            <summary>Gets nonlinear convergence options.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.TransientSimulationSolver">
+            <summary>Runs fixed-step backward-Euler transient simulations.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.TransientSimulationSolver.#ctor(CircuitSimulator.Core.Numerics.ILinearSystemSolver,CircuitSimulator.Core.Mna.MnaAssembler)">
+            <summary>Initializes a transient simulation solver.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.TransientSimulationSolver.Solve(CircuitSimulator.Core.Model.Circuit,CircuitSimulator.Core.Simulation.TransientSimulationOptions,System.Threading.CancellationToken)">
+            <summary>Compiles and simulates a physical circuit.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Simulation.TransientSimulationSolver.Solve(CircuitSimulator.Core.Compilation.CompiledCircuit,CircuitSimulator.Core.Simulation.TransientSimulationOptions,System.Threading.CancellationToken)">
+            <summary>Simulates an already compiled circuit.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Simulation.TransientSimulationStepper">
+            <summary>Owns mutable state and advances one transient simulation through accepted fixed steps.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Validation.CircuitValidationIssue">
+            <summary>
+            Describes one structured validation issue.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Validation.CircuitValidationIssue.#ctor(System.String,CircuitSimulator.Core.Validation.ValidationSeverity,System.String,System.Nullable{CircuitSimulator.Core.Model.ComponentId},System.Nullable{CircuitSimulator.Core.Model.TerminalId},System.Nullable{CircuitSimulator.Core.Model.NodeId})">
+            <summary>
+            Initializes a structured validation issue.
+            </summary>
+            <param name="code">The stable validation issue code.</param>
+            <param name="severity">The issue severity.</param>
+            <param name="message">The human-readable message.</param>
+            <param name="componentId">The related component identifier, when available.</param>
+            <param name="terminalId">The related terminal identifier, when available.</param>
+            <param name="nodeId">The related compiled node identifier, when available.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Validation.CircuitValidationIssue.Code">
+            <summary>
+            Gets the stable validation issue code.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Validation.CircuitValidationIssue.Severity">
+            <summary>
+            Gets the issue severity.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Validation.CircuitValidationIssue.Message">
+            <summary>
+            Gets the human-readable validation message.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Validation.CircuitValidationIssue.ComponentId">
+            <summary>
+            Gets the related component identifier, when available.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Validation.CircuitValidationIssue.TerminalId">
+            <summary>
+            Gets the related terminal identifier, when available.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Validation.CircuitValidationIssue.NodeId">
+            <summary>
+            Gets the related compiled node identifier, when available.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Validation.CircuitValidationReport">
+            <summary>
+            Immutable validation report produced during circuit compilation.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Validation.CircuitValidationReport.Empty">
+            <summary>
+            Gets an empty validation report.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Validation.CircuitValidationReport.#ctor(System.Collections.Generic.IEnumerable{CircuitSimulator.Core.Validation.CircuitValidationIssue})">
+            <summary>
+            Initializes a new validation report.
+            </summary>
+            <param name="issues">The validation issues.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Validation.CircuitValidationReport.Issues">
+            <summary>
+            Gets the immutable validation issues.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Validation.CircuitValidationReport.HasErrors">
+            <summary>
+            Gets a value indicating whether the report contains at least one fatal error.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Validation.ValidationCodes">
+            <summary>
+            Stable validation issue codes emitted by circuit compilation and simulation setup.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationCodes.CircuitNoGround">
+            <summary>
+            The circuit has no ground marker.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationCodes.CircuitMultipleDisconnectedGrounds">
+            <summary>
+            Ground markers compile into more than one disconnected electrical node.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationCodes.TerminalInvalidOwner">
+            <summary>
+            A terminal references an invalid owner component.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationCodes.ComponentInvalidTerminalCount">
+            <summary>
+            A component has an invalid terminal count or terminal ordering.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationCodes.ComponentInvalidParameter">
+            <summary>
+            A component parameter is invalid or unsupported.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationCodes.NodeFloatingSubnetwork">
+            <summary>
+            A compiled node subnetwork is not connected to ground.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationCodes.VoltageSourceSelfLoopNonzero">
+            <summary>
+            A nonzero ideal voltage source has both terminals on the same compiled node.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationCodes.MnaSingularSystem">
+            <summary>
+            The compiled topology or assembled MNA system is known to be singular.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationCodes.ComponentSelfLoop">
+            <summary>
+            A passive or source component has both terminals on the same compiled node.
+            </summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Validation.ValidationSeverity">
+            <summary>
+            Describes the severity of a circuit validation issue.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationSeverity.Info">
+            <summary>
+            Informational validation output.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationSeverity.Warning">
+            <summary>
+            A non-fatal validation warning.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Validation.ValidationSeverity.Error">
+            <summary>
+            A fatal validation error.
+            </summary>
+        </member>
+    </members>
+</doc>

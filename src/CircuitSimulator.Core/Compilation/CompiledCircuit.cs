@@ -29,12 +29,12 @@ public sealed class CompiledCircuit
         MnaVariableMap variableMap,
         CircuitValidationReport validationReport)
     {
-        ArgumentNullException.ThrowIfNull(sourceCircuit);
-        ArgumentNullException.ThrowIfNull(netlist);
-        ArgumentNullException.ThrowIfNull(graph);
-        ArgumentNullException.ThrowIfNull(components);
-        ArgumentNullException.ThrowIfNull(variableMap);
-        ArgumentNullException.ThrowIfNull(validationReport);
+        Guard.NotNull(sourceCircuit, nameof(sourceCircuit));
+        Guard.NotNull(netlist, nameof(netlist));
+        Guard.NotNull(graph, nameof(graph));
+        Guard.NotNull(components, nameof(components));
+        Guard.NotNull(variableMap, nameof(variableMap));
+        Guard.NotNull(validationReport, nameof(validationReport));
 
         var componentArray = components.ToArray();
         SourceCircuit = sourceCircuit;

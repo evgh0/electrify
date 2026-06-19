@@ -47,7 +47,7 @@ public sealed record NewtonRaphsonOptions
 
     private static void ValidatePositiveFinite(double value, string name)
     {
-        if (!double.IsFinite(value) || value <= 0.0)
+        if (!Guard.IsFinite(value) || value <= 0.0)
         {
             throw new ArgumentOutOfRangeException(name, value, "Tolerance must be finite and greater than zero.");
         }

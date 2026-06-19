@@ -6,7 +6,7 @@ public sealed record CapacitorParameters : IComponentParameters
     /// <summary>Initializes capacitor parameters.</summary>
     public CapacitorParameters(double capacitance)
     {
-        if (!double.IsFinite(capacitance) || capacitance <= 0.0)
+        if (!Guard.IsFinite(capacitance) || capacitance <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(capacitance), capacitance, "Capacitance must be finite and greater than zero.");
         }
