@@ -18,5 +18,20 @@ public enum ComponentKind
     /// <summary>
     /// A two-terminal independent voltage source.
     /// </summary>
-    VoltageSource
+    VoltageSource,
+
+    /// <summary>
+    /// A two-terminal capacitor.
+    /// </summary>
+    Capacitor,
+
+    /// <summary>
+    /// A two-terminal inductor.
+    /// </summary>
+    Inductor,
+
+    /// <summary>
+    /// A two-terminal Shockley diode.
+    /// </summary>
+    Diode
 }

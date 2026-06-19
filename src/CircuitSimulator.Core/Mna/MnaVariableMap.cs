@@ -71,6 +71,15 @@ public sealed class MnaVariableMap
             variables.Add(new MnaVariable(index, MnaVariableKind.BranchCurrent, null, component.ComponentId, $"I({component.Name})"));
         }
 
+        foreach (var component in components
+                     .Where(static component => component.Kind == ComponentKind.Inductor)
+                     .OrderBy(component => component.ComponentId.Value))
+        {
+            var index = new VariableIndex(variables.Count);
+            branchCurrentIndexes.Add(component.ComponentId, index);
+            variables.Add(new MnaVariable(index, MnaVariableKind.BranchCurrent, null, component.ComponentId, $"I({component.Name})"));
+        }
+
         return new MnaVariableMap(
             new ReadOnlyCollection<MnaVariable>(variables),
             nodeVoltageIndexes,

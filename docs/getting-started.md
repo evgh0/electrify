@@ -45,6 +45,37 @@ Vcomponent = Vpositive - Vnegative
 
 A voltage source branch current can be negative. This means that the physical current flows opposite the positive-to-negative reference direction.
 
+## Drive an ongoing simulation from a variable frame rate
+
+<xref:CircuitSimulator.Core.Simulation.RealtimeSimulationSession> keeps its fixed numerical timestep
+independent of rendering cadence. A frame loop can accumulate elapsed wall time and advance zero, one,
+or multiple steps per frame:
+
+```csharp
+var realtime = new RealtimeSimulationSession(
+    builder.Build(),
+    new RealtimeSimulationOptions(timeStep: 1e-4));
+
+double accumulator = 0.0;
+
+void RenderFrame(double elapsedSeconds)
+{
+    accumulator += elapsedSeconds;
+    while (accumulator >= realtime.Options.TimeStep)
+    {
+        realtime.Advance();
+        accumulator -= realtime.Options.TimeStep;
+    }
+
+    Render(realtime.LatestSample);
+}
+```
+
+Alternatively, consume <xref:CircuitSimulator.Core.Simulation.RealtimeSimulationSession.RunAsync*>
+away from the render callback. It uses monotonic absolute deadlines for best-effort 1x pacing and catches
+up without skipping fixed integration steps. Rendering can read the latest immutable sample at any frame
+rate, while a separate collector can retain samples needed for charts.
+
 ## Run the demonstration
 
 From the repository root:

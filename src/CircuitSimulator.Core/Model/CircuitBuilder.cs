@@ -44,6 +44,52 @@ public sealed class CircuitBuilder
     public TwoTerminalComponentHandle AddVoltageSource(string name, double voltage) =>
         AddTwoTerminalComponent(name, new VoltageSourceParameters(voltage));
 
+    /// <summary>Adds an independent sinusoidal voltage source.</summary>
+    public TwoTerminalComponentHandle AddSinusoidalVoltageSource(
+        string name,
+        double offset,
+        double amplitude,
+        double frequencyHz,
+        double phaseRadians = 0.0) =>
+        AddTwoTerminalComponent(
+            name,
+            new VoltageSourceParameters(
+                offset,
+                new SinusoidalSourceWaveform(offset, amplitude, frequencyHz, phaseRadians)));
+
+    /// <summary>Adds an independent sinusoidal current source.</summary>
+    public TwoTerminalComponentHandle AddSinusoidalCurrentSource(
+        string name,
+        double offset,
+        double amplitude,
+        double frequencyHz,
+        double phaseRadians = 0.0) =>
+        AddTwoTerminalComponent(
+            name,
+            new CurrentSourceParameters(
+                offset,
+                new SinusoidalSourceWaveform(offset, amplitude, frequencyHz, phaseRadians)));
+
+    /// <summary>Adds a two-terminal capacitor.</summary>
+    public TwoTerminalComponentHandle AddCapacitor(string name, double capacitance) =>
+        AddTwoTerminalComponent(name, new CapacitorParameters(capacitance));
+
+    /// <summary>Adds a two-terminal inductor.</summary>
+    public TwoTerminalComponentHandle AddInductor(string name, double inductance) =>
+        AddTwoTerminalComponent(name, new InductorParameters(inductance));
+
+    /// <summary>Adds a two-terminal Shockley diode.</summary>
+    public TwoTerminalComponentHandle AddDiode(
+        string name,
+        double saturationCurrent = 1e-12,
+        double idealityFactor = 1.0,
+        double thermalVoltage = DiodeParameters.DefaultThermalVoltage) =>
+        AddTwoTerminalComponent(
+            name,
+            new DiodeParameters(saturationCurrent, idealityFactor, thermalVoltage),
+            "A",
+            "K");
+
     /// <summary>
     /// Connects two terminals with an ideal wire.
     /// </summary>
@@ -104,7 +150,11 @@ public sealed class CircuitBuilder
     public Circuit Build() =>
         new(_components, _terminals, _wires, _groundTerminals);
 
-    private TwoTerminalComponentHandle AddTwoTerminalComponent(string name, IComponentParameters parameters)
+    private TwoTerminalComponentHandle AddTwoTerminalComponent(
+        string name,
+        IComponentParameters parameters,
+        string positiveName = "+",
+        string negativeName = "-")
     {
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(parameters);
@@ -123,8 +173,8 @@ public sealed class CircuitBuilder
         var positive = new TerminalId(_terminals.Count);
         var negative = new TerminalId(_terminals.Count + 1);
 
-        _terminals.Add(new TerminalDefinition(positive, componentId, 0, "+"));
-        _terminals.Add(new TerminalDefinition(negative, componentId, 1, "-"));
+        _terminals.Add(new TerminalDefinition(positive, componentId, 0, positiveName));
+        _terminals.Add(new TerminalDefinition(negative, componentId, 1, negativeName));
         _components.Add(new ComponentDefinition(componentId, name, [positive, negative], parameters));
 
         return new TwoTerminalComponentHandle(componentId, positive, negative);

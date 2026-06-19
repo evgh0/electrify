@@ -206,6 +206,9 @@ public sealed class CircuitCompiler
             ComponentKind.Resistor => component.Parameters is ResistorParameters,
             ComponentKind.CurrentSource => component.Parameters is CurrentSourceParameters,
             ComponentKind.VoltageSource => component.Parameters is VoltageSourceParameters,
+            ComponentKind.Capacitor => component.Parameters is CapacitorParameters,
+            ComponentKind.Inductor => component.Parameters is InductorParameters,
+            ComponentKind.Diode => component.Parameters is DiodeParameters,
             _ => false
         };
 

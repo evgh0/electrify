@@ -1,0 +1,38 @@
+<Application
+    x:Class="CircuitSimulator.RealtimeDemo.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <SolidColorBrush x:Key="WindowBackground">#0D1117</SolidColorBrush>
+    <SolidColorBrush x:Key="PanelBackground">#151B24</SolidColorBrush>
+    <SolidColorBrush x:Key="CardBackground">#111720</SolidColorBrush>
+    <SolidColorBrush x:Key="BorderBrush">#2B3544</SolidColorBrush>
+    <SolidColorBrush x:Key="PrimaryText">#E6EDF3</SolidColorBrush>
+    <SolidColorBrush x:Key="SecondaryText">#8B98A8</SolidColorBrush>
+    <SolidColorBrush x:Key="AccentBrush">#61D4B3</SolidColorBrush>
+    <SolidColorBrush x:Key="VoltageBrush">#66C7FF</SolidColorBrush>
+    <SolidColorBrush x:Key="CurrentBrush">#FFB86B</SolidColorBrush>
+    <SolidColorBrush x:Key="PowerBrush">#D38CFF</SolidColorBrush>
+    <SolidColorBrush x:Key="GridBrush">#283342</SolidColorBrush>
+    <SolidColorBrush x:Key="ErrorBrush">#FF6B7A</SolidColorBrush>
+  </Application.Resources>
+  <Application.Styles>
+    <FluentTheme DensityStyle="Compact" />
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{DynamicResource WindowBackground}" />
+      <Setter Property="Foreground" Value="{DynamicResource PrimaryText}" />
+      <Setter Property="FontFamily" Value="Inter" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource CardBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="Foreground" Value="{DynamicResource SecondaryText}" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+  </Application.Styles>
+</Application>

@@ -1,0 +1,115 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <SolidColorBrush x:Key="EditorBackground">#18181B</SolidColorBrush>
+    <SolidColorBrush x:Key="PanelBackground">#202024</SolidColorBrush>
+    <SolidColorBrush x:Key="PanelRaised">#27272C</SolidColorBrush>
+    <SolidColorBrush x:Key="SidebarBackground">#151518</SolidColorBrush>
+    <SolidColorBrush x:Key="BorderSubtle">#36363D</SolidColorBrush>
+    <SolidColorBrush x:Key="TextPrimary">#E9E9ED</SolidColorBrush>
+    <SolidColorBrush x:Key="TextSecondary">#9B9BA5</SolidColorBrush>
+    <SolidColorBrush x:Key="Accent">#8B7CF6</SolidColorBrush>
+    <SolidColorBrush x:Key="AccentHover">#9D91F8</SolidColorBrush>
+    <SolidColorBrush x:Key="SelectionBackground">#39334F</SolidColorBrush>
+    <SolidColorBrush x:Key="SelectionOverlay">#2D8B7CF6</SolidColorBrush>
+    <SolidColorBrush x:Key="HoverBackground">#303036</SolidColorBrush>
+    <SolidColorBrush x:Key="Error">#F07178</SolidColorBrush>
+    <SolidColorBrush x:Key="ErrorBackground">#22F07178</SolidColorBrush>
+    <SolidColorBrush x:Key="Warning">#F2C66D</SolidColorBrush>
+    <SolidColorBrush x:Key="Success">#7FD4A5</SolidColorBrush>
+    <SolidColorBrush x:Key="WireDefault">#C8C8D0</SolidColorBrush>
+    <SolidColorBrush x:Key="GridMajor">#38383F</SolidColorBrush>
+    <SolidColorBrush x:Key="ReferenceTrace">#62B6CB</SolidColorBrush>
+  </Styles.Resources>
+
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{DynamicResource EditorBackground}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    <Setter Property="FontFamily" Value="avares://Avalonia.Fonts.Inter/Assets#Inter" />
+    <Setter Property="FontSize" Value="13" />
+  </Style>
+
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource PanelBackground}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+
+  <Style Selector="TextBlock.heading">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+  </Style>
+
+  <Style Selector="TextBlock.caption">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+  </Style>
+
+  <Style Selector="Button">
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="Padding" Value="12,6" />
+    <Setter Property="MinHeight" Value="30" />
+  </Style>
+
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{DynamicResource Accent}" />
+    <Setter Property="Foreground" Value="#FFFFFF" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentHover}" />
+  </Style>
+
+  <Style Selector="Button.ghost">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBackground}" />
+    <Setter Property="TextBlock.Foreground" Value="{DynamicResource TextPrimary}" />
+  </Style>
+
+  <Style Selector="TextBox">
+    <Setter Property="Background" Value="{DynamicResource SidebarBackground}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+
+  <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+  </Style>
+
+  <Style Selector="ListBox">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="ListBoxItem">
+    <Setter Property="Padding" Value="10,8" />
+    <Setter Property="Margin" Value="0,1" />
+    <Setter Property="CornerRadius" Value="5" />
+  </Style>
+
+  <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource HoverBackground}" />
+  </Style>
+
+  <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SelectionBackground}" />
+  </Style>
+
+  <Style Selector="ComboBox">
+    <Setter Property="Background" Value="{DynamicResource PanelRaised}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+    <Setter Property="CornerRadius" Value="5" />
+  </Style>
+
+  <Style Selector="GridSplitter">
+    <Setter Property="Background" Value="{DynamicResource BorderSubtle}" />
+  </Style>
+</Styles>
