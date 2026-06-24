@@ -23,7 +23,7 @@ public sealed class NonlinearConvergenceException : SimulationException
         Exception innerException)
         : base(message, innerException)
     {
-        if (!double.IsFinite(simulationTime))
+        if (!Guard.IsFinite(simulationTime))
         {
             throw new ArgumentOutOfRangeException(nameof(simulationTime), simulationTime, "Simulation time must be finite.");
         }

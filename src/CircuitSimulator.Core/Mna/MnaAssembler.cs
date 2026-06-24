@@ -19,7 +19,8 @@ public sealed class MnaAssembler
             [ComponentKind.VoltageSource] = new VoltageSourceMnaStamp(),
             [ComponentKind.Capacitor] = new CapacitorMnaStamp(),
             [ComponentKind.Inductor] = new InductorMnaStamp(),
-            [ComponentKind.Diode] = new DiodeMnaStamp()
+            [ComponentKind.Diode] = new DiodeMnaStamp(),
+            [ComponentKind.Switch] = new SwitchMnaStamp()
         };
     }
 
@@ -30,7 +31,7 @@ public sealed class MnaAssembler
     /// <summary>Assembles an affine DC system with nonlinear devices linearized around an iterate.</summary>
     public MnaLinearSystem AssembleDcLinearized(CompiledCircuit circuit, NonlinearStampContext nonlinearContext)
     {
-        ArgumentNullException.ThrowIfNull(nonlinearContext);
+        Guard.NotNull(nonlinearContext, nameof(nonlinearContext));
         if (!ReferenceEquals(circuit, nonlinearContext.Circuit))
         {
             throw new ArgumentException("Nonlinear context belongs to a different compiled circuit.", nameof(nonlinearContext));
@@ -42,7 +43,7 @@ public sealed class MnaAssembler
     /// <summary>Assembles one backward-Euler transient system.</summary>
     public MnaLinearSystem AssembleTransient(TransientStampContext transientContext)
     {
-        ArgumentNullException.ThrowIfNull(transientContext);
+        Guard.NotNull(transientContext, nameof(transientContext));
         var circuit = transientContext.Circuit;
         var builder = new DenseMnaSystemBuilder(circuit.VariableMap.Dimension);
         var context = new MnaStampContext(circuit);
@@ -57,7 +58,7 @@ public sealed class MnaAssembler
 
     private MnaLinearSystem AssembleDcCore(CompiledCircuit circuit, NonlinearStampContext? nonlinearContext)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
+        Guard.NotNull(circuit, nameof(circuit));
         var builder = new DenseMnaSystemBuilder(circuit.VariableMap.Dimension);
         var context = new MnaStampContext(circuit);
 
@@ -338,6 +339,42 @@ public sealed class MnaAssembler
 
         private static double GetValue(Model.VariableIndex? index, IReadOnlyList<double> solution) =>
             index is null ? 0.0 : solution[index.Value.Value];
+    }
+
+    private sealed class SwitchMnaStamp : ComponentMnaStamp<SwitchParameters>
+    {
+        protected override void StampDc(
+            CompiledComponent component,
+            SwitchParameters parameters,
+            MnaStampContext context,
+            NonlinearStampContext? nonlinearContext,
+            IMnaSystemBuilder builder) =>
+            Stamp(component, context, builder, parameters.InitiallyClosed);
+
+        protected override void StampTransient(
+            CompiledComponent component,
+            SwitchParameters parameters,
+            MnaStampContext context,
+            TransientStampContext transientContext,
+            IMnaSystemBuilder builder) =>
+            Stamp(component, context, builder, transientContext.GetSwitchState(component.ComponentId));
+
+        private static void Stamp(
+            CompiledComponent component,
+            MnaStampContext context,
+            IMnaSystemBuilder builder,
+            bool isClosed)
+        {
+            var branch = context.Variables.GetBranchCurrentIndex(component.ComponentId);
+            if (!isClosed)
+            {
+                builder.AddMatrix(branch, branch, 1.0);
+                return;
+            }
+
+            var nodes = GetNodes(component, context);
+            MnaStamps.StampVoltageSource(builder, nodes.Positive, nodes.Negative, branch, 0.0);
+        }
     }
 
     private static void EnsureTwoTerminal(CompiledComponent component)

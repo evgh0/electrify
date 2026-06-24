@@ -15,7 +15,7 @@ public sealed class TransientSimulationResult
     {
         CompiledCircuit = compiledCircuit ?? throw new ArgumentNullException(nameof(compiledCircuit));
         Options = options ?? throw new ArgumentNullException(nameof(options));
-        ArgumentNullException.ThrowIfNull(samples);
+        Guard.NotNull(samples, nameof(samples));
         Samples = new ReadOnlyCollection<TransientSample>(samples.ToArray());
     }
 

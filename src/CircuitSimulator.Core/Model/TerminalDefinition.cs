@@ -16,7 +16,7 @@ public sealed class TerminalDefinition
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="localIndex"/> is negative.</exception>
     public TerminalDefinition(TerminalId id, ComponentId ownerComponentId, int localIndex, string name)
     {
-        ArgumentNullException.ThrowIfNull(name);
+        Guard.NotNull(name, nameof(name));
 
         if (localIndex < 0)
         {

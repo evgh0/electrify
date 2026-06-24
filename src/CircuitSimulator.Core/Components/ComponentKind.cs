@@ -33,5 +33,10 @@ public enum ComponentKind
     /// <summary>
     /// A two-terminal Shockley diode.
     /// </summary>
-    Diode
+    Diode,
+
+    /// <summary>
+    /// A controllable ideal two-terminal switch.
+    /// </summary>
+    Switch
 }

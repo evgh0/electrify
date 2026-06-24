@@ -53,7 +53,7 @@ public sealed class DenseMnaSystemBuilder : IMnaSystemBuilder
 
     private static void ValidateFinite(double value, string parameterName)
     {
-        if (!double.IsFinite(value))
+        if (!Guard.IsFinite(value))
         {
             throw new MnaAssemblyException($"MNA contribution '{parameterName}' must be finite.");
         }

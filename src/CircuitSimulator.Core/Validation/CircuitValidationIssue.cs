@@ -24,8 +24,11 @@ public sealed class CircuitValidationIssue
         TerminalId? terminalId = null,
         NodeId? nodeId = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(code);
-        ArgumentNullException.ThrowIfNull(message);
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            throw new ArgumentException("Validation issue code cannot be null or whitespace.", nameof(code));
+        }
+        Guard.NotNull(message, nameof(message));
 
         Code = code;
         Severity = severity;

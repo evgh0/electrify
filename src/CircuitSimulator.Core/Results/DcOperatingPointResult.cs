@@ -25,9 +25,9 @@ public sealed class DcOperatingPointResult
     /// <param name="solution">The solved unknown vector.</param>
     public DcOperatingPointResult(CompiledCircuit circuit, MnaLinearSystem linearSystem, double[] solution)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
-        ArgumentNullException.ThrowIfNull(linearSystem);
-        ArgumentNullException.ThrowIfNull(solution);
+        Guard.NotNull(circuit, nameof(circuit));
+        Guard.NotNull(linearSystem, nameof(linearSystem));
+        Guard.NotNull(solution, nameof(solution));
 
         if (solution.Length != circuit.VariableMap.Dimension)
         {
@@ -63,7 +63,7 @@ public sealed class DcOperatingPointResult
     public IReadOnlyList<NodeVoltageResult> NodeVoltages => _nodeVoltages;
 
     /// <summary>
-    /// Gets solved branch currents for voltage sources.
+    /// Gets solved branch currents for voltage sources, inductors, and ideal switches.
     /// </summary>
     public IReadOnlyList<BranchCurrentResult> BranchCurrents => _branchCurrents;
 
@@ -87,7 +87,7 @@ public sealed class DcOperatingPointResult
         GetNodeVoltage(CompiledCircuit.Netlist.GetNode(terminalId));
 
     /// <summary>
-    /// Gets the branch current for a voltage source.
+    /// Gets the branch current for a voltage source, inductor, or ideal switch.
     /// </summary>
     /// <param name="componentId">The voltage-source component identifier.</param>
     /// <returns>The branch current in amperes, positive from terminal 0 to terminal 1.</returns>
@@ -145,6 +145,7 @@ public sealed class DcOperatingPointResult
             CapacitorParameters => 0.0,
             InductorParameters => GetBranchCurrent(componentId),
             DiodeParameters diode => DiodeModel.Evaluate(diode, GetComponentVoltage(componentId)).Current,
+            SwitchParameters => GetBranchCurrent(componentId),
             _ => throw new SimulationException($"Component '{component.Name}' ({component.ComponentId}) has unsupported parameters.")
         };
     }

@@ -9,7 +9,7 @@ public sealed record RealtimeSimulationOptions
         TransientInitialConditions? initialConditions = null,
         NewtonRaphsonOptions? newtonOptions = null)
     {
-        if (!double.IsFinite(timeStep) || timeStep <= 0.0)
+        if (!Guard.IsFinite(timeStep) || timeStep <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(timeStep), timeStep, "Time step must be finite and greater than zero.");
         }

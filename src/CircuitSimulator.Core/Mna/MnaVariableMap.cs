@@ -43,8 +43,8 @@ public sealed class MnaVariableMap
         IEnumerable<ElectricalNode> nodes,
         IEnumerable<CompiledComponent> components)
     {
-        ArgumentNullException.ThrowIfNull(nodes);
-        ArgumentNullException.ThrowIfNull(components);
+        Guard.NotNull(nodes, nameof(nodes));
+        Guard.NotNull(components, nameof(components));
 
         var variables = new List<MnaVariable>();
         var nodeVoltageIndexes = new Dictionary<NodeId, VariableIndex>();
@@ -73,6 +73,15 @@ public sealed class MnaVariableMap
 
         foreach (var component in components
                      .Where(static component => component.Kind == ComponentKind.Inductor)
+                     .OrderBy(component => component.ComponentId.Value))
+        {
+            var index = new VariableIndex(variables.Count);
+            branchCurrentIndexes.Add(component.ComponentId, index);
+            variables.Add(new MnaVariable(index, MnaVariableKind.BranchCurrent, null, component.ComponentId, $"I({component.Name})"));
+        }
+
+        foreach (var component in components
+                     .Where(static component => component.Kind == ComponentKind.Switch)
                      .OrderBy(component => component.ComponentId.Value))
         {
             var index = new VariableIndex(variables.Count);

@@ -34,7 +34,7 @@ public sealed record CurrentSourceParameters : IComponentParameters
     /// <summary>Initializes current-source DC and transient excitation.</summary>
     public CurrentSourceParameters(double dcValue, SourceWaveform transientWaveform)
     {
-        if (!double.IsFinite(dcValue))
+        if (!Guard.IsFinite(dcValue))
         {
             throw new ArgumentOutOfRangeException(nameof(dcValue), dcValue, "DC current must be finite.");
         }

@@ -12,17 +12,17 @@ public sealed record DiodeParameters : IComponentParameters
         double idealityFactor = 1.0,
         double thermalVoltage = DefaultThermalVoltage)
     {
-        if (!double.IsFinite(saturationCurrent) || saturationCurrent <= 0.0)
+        if (!Guard.IsFinite(saturationCurrent) || saturationCurrent <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(saturationCurrent), saturationCurrent, "Saturation current must be finite and greater than zero.");
         }
 
-        if (!double.IsFinite(idealityFactor) || idealityFactor <= 0.0)
+        if (!Guard.IsFinite(idealityFactor) || idealityFactor <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(idealityFactor), idealityFactor, "Ideality factor must be finite and greater than zero.");
         }
 
-        if (!double.IsFinite(thermalVoltage) || thermalVoltage <= 0.0)
+        if (!Guard.IsFinite(thermalVoltage) || thermalVoltage <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(thermalVoltage), thermalVoltage, "Thermal voltage must be finite and greater than zero.");
         }

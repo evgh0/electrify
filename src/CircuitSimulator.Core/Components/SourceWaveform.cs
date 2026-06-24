@@ -13,7 +13,7 @@ public abstract record SourceWaveform
     /// <summary>Validates a waveform evaluation time.</summary>
     protected static void ValidateTime(double time)
     {
-        if (!double.IsFinite(time))
+        if (!Guard.IsFinite(time))
         {
             throw new ArgumentOutOfRangeException(nameof(time), time, "Time must be finite.");
         }
@@ -26,7 +26,7 @@ public sealed record ConstantSourceWaveform : SourceWaveform
     /// <summary>Initializes a constant waveform.</summary>
     public ConstantSourceWaveform(double value)
     {
-        if (!double.IsFinite(value))
+        if (!Guard.IsFinite(value))
         {
             throw new ArgumentOutOfRangeException(nameof(value), value, "Waveform value must be finite.");
         }
@@ -51,22 +51,22 @@ public sealed record SinusoidalSourceWaveform : SourceWaveform
     /// <summary>Initializes a sinusoidal waveform.</summary>
     public SinusoidalSourceWaveform(double offset, double amplitude, double frequencyHz, double phaseRadians = 0.0)
     {
-        if (!double.IsFinite(offset))
+        if (!Guard.IsFinite(offset))
         {
             throw new ArgumentOutOfRangeException(nameof(offset), offset, "Offset must be finite.");
         }
 
-        if (!double.IsFinite(amplitude))
+        if (!Guard.IsFinite(amplitude))
         {
             throw new ArgumentOutOfRangeException(nameof(amplitude), amplitude, "Amplitude must be finite.");
         }
 
-        if (!double.IsFinite(frequencyHz) || frequencyHz <= 0.0)
+        if (!Guard.IsFinite(frequencyHz) || frequencyHz <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(frequencyHz), frequencyHz, "Frequency must be finite and greater than zero.");
         }
 
-        if (!double.IsFinite(phaseRadians))
+        if (!Guard.IsFinite(phaseRadians))
         {
             throw new ArgumentOutOfRangeException(nameof(phaseRadians), phaseRadians, "Phase must be finite.");
         }

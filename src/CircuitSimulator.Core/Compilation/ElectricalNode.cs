@@ -16,7 +16,7 @@ public sealed class ElectricalNode
     /// <param name="terminalIds">The physical terminals belonging to this node.</param>
     public ElectricalNode(NodeId id, bool isGround, IEnumerable<TerminalId> terminalIds)
     {
-        ArgumentNullException.ThrowIfNull(terminalIds);
+        Guard.NotNull(terminalIds, nameof(terminalIds));
 
         Id = id;
         IsGround = isGround;

@@ -11,14 +11,14 @@ public sealed class NonlinearStampContext
     public NonlinearStampContext(CompiledCircuit circuit, IReadOnlyList<double> solutionEstimate)
     {
         Circuit = circuit ?? throw new ArgumentNullException(nameof(circuit));
-        ArgumentNullException.ThrowIfNull(solutionEstimate);
+        Guard.NotNull(solutionEstimate, nameof(solutionEstimate));
         if (solutionEstimate.Count != circuit.VariableMap.Dimension)
         {
             throw new ArgumentException("Solution estimate length must match the MNA dimension.", nameof(solutionEstimate));
         }
 
         _solutionEstimate = solutionEstimate.ToArray();
-        if (_solutionEstimate.Any(value => !double.IsFinite(value)))
+        if (_solutionEstimate.Any(value => !Guard.IsFinite(value)))
         {
             throw new ArgumentException("Solution estimate values must be finite.", nameof(solutionEstimate));
         }

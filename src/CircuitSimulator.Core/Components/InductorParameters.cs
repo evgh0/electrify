@@ -6,7 +6,7 @@ public sealed record InductorParameters : IComponentParameters
     /// <summary>Initializes inductor parameters.</summary>
     public InductorParameters(double inductance)
     {
-        if (!double.IsFinite(inductance) || inductance <= 0.0)
+        if (!Guard.IsFinite(inductance) || inductance <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(inductance), inductance, "Inductance must be finite and greater than zero.");
         }

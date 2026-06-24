@@ -26,11 +26,11 @@ internal sealed class TransientSimulationStepper
         MnaAssembler assembler)
     {
         _circuit = circuit ?? throw new ArgumentNullException(nameof(circuit));
-        ArgumentNullException.ThrowIfNull(initialConditions);
+        Guard.NotNull(initialConditions, nameof(initialConditions));
         _newtonOptions = newtonOptions ?? throw new ArgumentNullException(nameof(newtonOptions));
         _linearSystemSolver = linearSystemSolver ?? throw new ArgumentNullException(nameof(linearSystemSolver));
         _assembler = assembler ?? throw new ArgumentNullException(nameof(assembler));
-        if (!double.IsFinite(startTime) || startTime < 0.0)
+        if (!Guard.IsFinite(startTime) || startTime < 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(startTime), startTime, "Start time must be finite and non-negative.");
         }
@@ -45,22 +45,31 @@ internal sealed class TransientSimulationStepper
 
     public double CurrentTime => Volatile.Read(ref _currentTime);
 
+    public bool GetSwitchState(Model.ComponentId componentId) => _state.GetSwitchState(componentId);
+
+    public bool TryGetSwitchState(Model.ComponentId componentId, out bool isClosed) =>
+        _state.TryGetSwitchState(componentId, out isClosed);
+
+    public void SetSwitchState(Model.ComponentId componentId, bool isClosed) =>
+        _state.SetSwitchState(componentId, isClosed);
+
     public TransientSample Advance(double timeStep, CancellationToken cancellationToken)
     {
-        if (!double.IsFinite(timeStep) || timeStep <= 0.0)
+        if (!Guard.IsFinite(timeStep) || timeStep <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(timeStep), timeStep, "Time step must be finite and greater than zero.");
         }
 
         var targetTime = CurrentTime + timeStep;
-        if (!double.IsFinite(targetTime) || targetTime <= CurrentTime)
+        if (!Guard.IsFinite(targetTime) || targetTime <= CurrentTime)
         {
             throw new SimulationException(
                 $"A transient step of {timeStep:R} s cannot advance simulation time {CurrentTime:R} s.");
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        var solution = Solve(targetTime, timeStep, cancellationToken);
+        var switchStates = _state.CaptureSwitchStates();
+        var solution = Solve(targetTime, timeStep, switchStates, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         var sample = new TransientSample(_circuit, targetTime, timeStep, _state, solution);
         cancellationToken.ThrowIfCancellationRequested();
@@ -70,12 +79,16 @@ internal sealed class TransientSimulationStepper
         return sample;
     }
 
-    private double[] Solve(double targetTime, double timeStep, CancellationToken cancellationToken)
+    private double[] Solve(
+        double targetTime,
+        double timeStep,
+        IReadOnlyDictionary<Model.ComponentId, bool> switchStates,
+        CancellationToken cancellationToken)
     {
         if (_nonlinearSolver is null)
         {
             var system = _assembler.AssembleTransient(
-                new TransientStampContext(_circuit, _state, targetTime, timeStep));
+                new TransientStampContext(_circuit, _state, targetTime, timeStep, switchStates));
             return _linearSystemSolver.Solve(system);
         }
 
@@ -84,7 +97,7 @@ internal sealed class TransientSimulationStepper
             return _nonlinearSolver.Solve(
                 _circuit.VariableMap,
                 estimate => _assembler.AssembleTransient(
-                    new TransientStampContext(_circuit, _state, targetTime, timeStep, estimate)),
+                    new TransientStampContext(_circuit, _state, targetTime, timeStep, switchStates, estimate)),
                 _previousSolution,
                 _newtonOptions,
                 (current, candidate) => NonlinearCircuitUtilities.LimitDiodeVoltageStep(

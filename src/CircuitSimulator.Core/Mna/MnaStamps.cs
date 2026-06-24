@@ -20,7 +20,7 @@ public static class MnaStamps
         VariableIndex? negativeNodeVoltage,
         double conductance)
     {
-        ArgumentNullException.ThrowIfNull(builder);
+        Guard.NotNull(builder, nameof(builder));
         ValidateFinite(conductance, nameof(conductance));
 
         if (positiveNodeVoltage is { } p)
@@ -53,7 +53,7 @@ public static class MnaStamps
         VariableIndex? negativeNodeVoltage,
         double current)
     {
-        ArgumentNullException.ThrowIfNull(builder);
+        Guard.NotNull(builder, nameof(builder));
         ValidateFinite(current, nameof(current));
 
         if (positiveNodeVoltage is { } p)
@@ -82,7 +82,7 @@ public static class MnaStamps
         VariableIndex branchCurrent,
         double voltage)
     {
-        ArgumentNullException.ThrowIfNull(builder);
+        Guard.NotNull(builder, nameof(builder));
         ValidateFinite(voltage, nameof(voltage));
 
         if (positiveNodeVoltage is { } p)
@@ -102,7 +102,7 @@ public static class MnaStamps
 
     private static void ValidateFinite(double value, string parameterName)
     {
-        if (!double.IsFinite(value))
+        if (!Guard.IsFinite(value))
         {
             throw new MnaAssemblyException($"MNA stamp parameter '{parameterName}' must be finite.");
         }

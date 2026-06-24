@@ -21,6 +21,7 @@ internal static class DcAnalysisValidator
         foreach (var component in circuit.Components)
         {
             if (component.Kind is ComponentKind.Capacitor or ComponentKind.CurrentSource ||
+                component.Parameters is SwitchParameters { InitiallyClosed: false } ||
                 component.Nodes[0] == component.Nodes[1])
             {
                 continue;
@@ -53,7 +54,7 @@ internal static class DcAnalysisValidator
         if (floating.Length > 0)
         {
             throw new SimulationException(
-                $"DC analysis has nodes disconnected from ground after capacitors and independent current sources are treated as open branches: {string.Join(", ", floating)}.");
+                $"DC analysis has nodes disconnected from ground after capacitors, independent current sources, and initially open switches are treated as open branches: {string.Join(", ", floating)}.");
         }
     }
 }

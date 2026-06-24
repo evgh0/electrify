@@ -22,7 +22,10 @@ public sealed class MnaVariable
         ComponentId? componentId,
         string name)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Variable name cannot be null or whitespace.", nameof(name));
+        }
 
         Index = index;
         Kind = kind;

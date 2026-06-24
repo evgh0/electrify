@@ -1,0 +1,13 @@
+{
+  "name": "CircuitSimulator.Unity.PlayModeTests",
+  "rootNamespace": "CircuitSimulator.Unity.Tests",
+  "references": [
+    "CircuitSimulator.Unity.Runtime"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "autoReferenced": false
+}

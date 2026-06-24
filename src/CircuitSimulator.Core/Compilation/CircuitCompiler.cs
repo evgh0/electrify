@@ -19,7 +19,7 @@ public sealed class CircuitCompiler
     /// <exception cref="CircuitCompilationException">Thrown when compilation validation fails.</exception>
     public CompiledCircuit Compile(Circuit circuit)
     {
-        ArgumentNullException.ThrowIfNull(circuit);
+        Guard.NotNull(circuit, nameof(circuit));
 
         var issues = new List<CircuitValidationIssue>();
         ValidatePhysicalCircuit(circuit, issues);
@@ -144,7 +144,7 @@ public sealed class CircuitCompiler
         HashSet<TerminalId> terminalIds,
         List<CircuitValidationIssue> issues)
     {
-        if (!Enum.IsDefined(component.Kind))
+        if (!Enum.IsDefined(typeof(ComponentKind), component.Kind))
         {
             issues.Add(new CircuitValidationIssue(
                 ValidationCodes.ComponentInvalidParameter,
@@ -209,6 +209,7 @@ public sealed class CircuitCompiler
             ComponentKind.Capacitor => component.Parameters is CapacitorParameters,
             ComponentKind.Inductor => component.Parameters is InductorParameters,
             ComponentKind.Diode => component.Parameters is DiodeParameters,
+            ComponentKind.Switch => component.Parameters is SwitchParameters,
             _ => false
         };
 
@@ -311,6 +312,15 @@ public sealed class CircuitCompiler
                         componentId: component.ComponentId,
                         nodeId: component.Nodes[0]));
                 }
+            }
+            else if (component.Parameters is SwitchParameters { InitiallyClosed: true })
+            {
+                issues.Add(new CircuitValidationIssue(
+                    ValidationCodes.MnaSingularSystem,
+                    ValidationSeverity.Error,
+                    $"Initially closed switch '{component.Name}' ({component.ComponentId}) is a self-loop and would add a redundant MNA constraint.",
+                    componentId: component.ComponentId,
+                    nodeId: component.Nodes[0]));
             }
             else
             {

@@ -18,7 +18,7 @@ public sealed class CircuitValidationReport
     /// <param name="issues">The validation issues.</param>
     public CircuitValidationReport(IEnumerable<CircuitValidationIssue> issues)
     {
-        ArgumentNullException.ThrowIfNull(issues);
+        Guard.NotNull(issues, nameof(issues));
 
         var issueArray = issues.ToArray();
         if (issueArray.Any(static issue => issue is null))

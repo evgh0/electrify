@@ -90,6 +90,15 @@ public sealed class CircuitBuilder
             "A",
             "K");
 
+    /// <summary>Adds a controllable ideal two-terminal switch.</summary>
+    /// <param name="name">The unique component name.</param>
+    /// <param name="initiallyClosed">
+    /// <see langword="true"/> to start as an ideal short; <see langword="false"/> to start open.
+    /// </param>
+    /// <returns>A handle containing the component identifier and ordered terminals.</returns>
+    public TwoTerminalComponentHandle AddSwitch(string name, bool initiallyClosed = false) =>
+        AddTwoTerminalComponent(name, new SwitchParameters(initiallyClosed));
+
     /// <summary>
     /// Connects two terminals with an ideal wire.
     /// </summary>
@@ -116,7 +125,7 @@ public sealed class CircuitBuilder
     /// <exception cref="CircuitModelException">Thrown when any terminal is not owned by this builder.</exception>
     public void Connect(params TerminalId[] terminals)
     {
-        ArgumentNullException.ThrowIfNull(terminals);
+        Guard.NotNull(terminals, nameof(terminals));
 
         if (terminals.Length < 2)
         {
@@ -156,8 +165,8 @@ public sealed class CircuitBuilder
         string positiveName = "+",
         string negativeName = "-")
     {
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(parameters);
+        Guard.NotNull(name, nameof(name));
+        Guard.NotNull(parameters, nameof(parameters));
 
         if (string.IsNullOrWhiteSpace(name))
         {

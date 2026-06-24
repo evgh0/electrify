@@ -17,8 +17,8 @@ public sealed class NodeGraph
     /// <param name="edges">The graph edges.</param>
     public NodeGraph(IEnumerable<ElectricalNode> nodes, IEnumerable<ComponentGraphEdge> edges)
     {
-        ArgumentNullException.ThrowIfNull(nodes);
-        ArgumentNullException.ThrowIfNull(edges);
+        Guard.NotNull(nodes, nameof(nodes));
+        Guard.NotNull(edges, nameof(edges));
 
         Nodes = new ReadOnlyCollection<ElectricalNode>(nodes.ToArray());
         Edges = new ReadOnlyCollection<ComponentGraphEdge>(edges.ToArray());
