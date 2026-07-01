@@ -4,6 +4,7 @@ using CircuitSimulator.Core.Mna;
 using CircuitSimulator.Core.Model;
 using CircuitSimulator.Core.Simulation;
 using CircuitSimulator.Core.Tests.Support;
+using CircuitSimulator.Core.Validation;
 
 namespace CircuitSimulator.Core.Tests;
 
@@ -16,16 +17,60 @@ public sealed class ReactiveComponentTests
         var capacitor = builder.AddCapacitor("C1", 1e-6);
         var inductor = builder.AddInductor("L1", 2e-3);
         var diode = builder.AddDiode("D1");
+        var led = builder.AddLed("LED1");
         var circuit = builder.Build();
 
         Assert.IsType<CapacitorParameters>(circuit.GetComponent(capacitor.ComponentId).Parameters);
         Assert.IsType<InductorParameters>(circuit.GetComponent(inductor.ComponentId).Parameters);
         Assert.IsType<DiodeParameters>(circuit.GetComponent(diode.ComponentId).Parameters);
+        Assert.IsType<LedParameters>(circuit.GetComponent(led.ComponentId).Parameters);
         Assert.Equal("A", circuit.GetTerminal(diode.Positive).Name);
         Assert.Equal("K", circuit.GetTerminal(diode.Negative).Name);
+        Assert.Equal("A", circuit.GetTerminal(led.Positive).Name);
+        Assert.Equal("K", circuit.GetTerminal(led.Negative).Name);
         Assert.Throws<ArgumentOutOfRangeException>(() => new CapacitorParameters(0.0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new InductorParameters(double.NaN));
         Assert.Throws<ArgumentOutOfRangeException>(() => new DiodeParameters(-1.0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LedParameters(referenceCurrent: 0.0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new LedParameters(nominalForwardVoltage: 1_000.0));
+    }
+
+    [Fact]
+    public void LedParametersDeriveShockleySaturationCurrentFromNominalOperatingPoint()
+    {
+        var parameters = new LedParameters();
+        var nominal = DiodeModel.Evaluate(parameters, parameters.NominalForwardVoltage);
+
+        Assert.Equal(ComponentKind.Led, parameters.Kind);
+        Assert.True(double.IsFinite(parameters.SaturationCurrent));
+        Assert.True(parameters.SaturationCurrent > 0.0);
+        AssertEx.NearlyEqual(parameters.ReferenceCurrent, nominal.Current, 1e-10);
+    }
+
+    [Fact]
+    public void CompilerRejectsLedKindWithIncompatibleParameters()
+    {
+        var componentId = new ComponentId(0);
+        var positive = new TerminalId(0);
+        var negative = new TerminalId(1);
+        var circuit = new Circuit(
+            new[]
+            {
+                new ComponentDefinition(componentId, "LED1", [positive, negative], new FakeLedParameters())
+            },
+            new[]
+            {
+                new TerminalDefinition(positive, componentId, 0, "A"),
+                new TerminalDefinition(negative, componentId, 1, "K")
+            },
+            [],
+            [negative]);
+
+        var exception = Assert.Throws<CircuitCompilationException>(() => new CircuitCompiler().Compile(circuit));
+
+        Assert.Contains(
+            exception.ValidationReport.Issues,
+            issue => issue.Code == ValidationCodes.ComponentInvalidParameter);
     }
 
     [Fact]
@@ -130,5 +175,10 @@ public sealed class ReactiveComponentTests
 
         Assert.Contains("capacitors", exception.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("NodeId(1)", exception.Message, StringComparison.Ordinal);
+    }
+
+    private sealed class FakeLedParameters : IComponentParameters
+    {
+        public ComponentKind Kind => ComponentKind.Led;
     }
 }

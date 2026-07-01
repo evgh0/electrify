@@ -304,6 +304,11 @@
             A two-terminal Shockley diode.
             </summary>
         </member>
+        <member name="F:CircuitSimulator.Core.Components.ComponentKind.Led">
+            <summary>
+            A two-terminal LED modeled as a Shockley diode fitted to a nominal forward operating point.
+            </summary>
+        </member>
         <member name="F:CircuitSimulator.Core.Components.ComponentKind.Switch">
             <summary>
             A controllable ideal two-terminal switch.
@@ -345,6 +350,9 @@
         </member>
         <member name="M:CircuitSimulator.Core.Components.DiodeModel.Evaluate(CircuitSimulator.Core.Components.DiodeParameters,System.Double)">
             <summary>Evaluates current, conductance, and equivalent-source current at a diode voltage.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.DiodeModel.Evaluate(CircuitSimulator.Core.Components.LedParameters,System.Double)">
+            <summary>Evaluates current, conductance, and equivalent-source current at an LED voltage.</summary>
         </member>
         <member name="T:CircuitSimulator.Core.Components.DiodeLinearization">
             <summary>Contains a diode value and its affine tangent model.</summary>
@@ -393,6 +401,39 @@
             <summary>Gets inductance in henries.</summary>
         </member>
         <member name="P:CircuitSimulator.Core.Components.InductorParameters.Kind">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Components.LedParameters">
+            <summary>Immutable Shockley-equivalent LED parameters.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.LedParameters.DefaultNominalForwardVoltage">
+            <summary>Default nominal forward voltage for a red indicator LED.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.LedParameters.DefaultReferenceCurrent">
+            <summary>Default reference forward current for a small indicator LED.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Components.LedParameters.DefaultIdealityFactor">
+            <summary>Default LED emission ideality factor.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Components.LedParameters.#ctor(System.Double,System.Double,System.Double,System.Double)">
+            <summary>Initializes LED parameters from a nominal forward-voltage operating point.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.LedParameters.NominalForwardVoltage">
+            <summary>Gets nominal forward voltage in volts.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.LedParameters.ReferenceCurrent">
+            <summary>Gets reference forward current in amperes.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.LedParameters.IdealityFactor">
+            <summary>Gets the emission ideality factor.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.LedParameters.ThermalVoltage">
+            <summary>Gets thermal voltage in volts.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.LedParameters.SaturationCurrent">
+            <summary>Gets the derived reverse saturation current in amperes.</summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Components.LedParameters.Kind">
             <inheritdoc />
         </member>
         <member name="T:CircuitSimulator.Core.Components.ResistorParameters">
@@ -834,6 +875,299 @@
         <member name="P:CircuitSimulator.Core.Mna.TransientStampContext.SolutionEstimate">
             <summary>Gets the nonlinear solution estimate when present.</summary>
         </member>
+        <member name="T:CircuitSimulator.Core.Model.Breadboard">
+            <summary>
+            Routes component terminals through a solderless breadboard layout using ordinary ideal wires.
+            </summary>
+            <remarks>
+            A breadboard does not create component definitions or solver variables. It is an append-only helper tied
+            to one <see cref="T:CircuitSimulator.Core.Model.CircuitBuilder"/>: inserting terminals into connected holes adds the same ideal wires
+            that a user could add manually with <see cref="M:CircuitSimulator.Core.Model.CircuitBuilder.Connect(CircuitSimulator.Core.Model.TerminalId,CircuitSimulator.Core.Model.TerminalId)"/>.
+            </remarks>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Breadboard.#ctor(CircuitSimulator.Core.Model.CircuitBuilder)">
+            <summary>
+            Initializes a helper for the standard 30-column breadboard layout.
+            </summary>
+            <param name="builder">The circuit builder that will receive generated ideal wires.</param>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Breadboard.#ctor(CircuitSimulator.Core.Model.CircuitBuilder,CircuitSimulator.Core.Model.BreadboardLayout)">
+            <summary>
+            Initializes a helper for the supplied breadboard layout.
+            </summary>
+            <param name="builder">The circuit builder that will receive generated ideal wires.</param>
+            <param name="layout">The immutable breadboard topology.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.Breadboard.Layout">
+            <summary>
+            Gets the breadboard topology used by this helper.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.Breadboard.OccupiedHoles">
+            <summary>
+            Gets the currently occupied holes and their inserted terminal identifiers.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Breadboard.Insert(CircuitSimulator.Core.Model.BreadboardHole,CircuitSimulator.Core.Model.TerminalId)">
+            <summary>
+            Inserts one component terminal into a breadboard hole.
+            </summary>
+            <param name="hole">The target breadboard hole.</param>
+            <param name="terminal">The component terminal to insert.</param>
+            <returns>The inserted terminal identifier.</returns>
+            <exception cref="T:CircuitSimulator.Core.Model.CircuitModelException">
+            Thrown when the hole is already occupied, the terminal has already been inserted, or the terminal
+            is not owned by the associated builder.
+            </exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Breadboard.ConnectNets(CircuitSimulator.Core.Model.BreadboardHole,CircuitSimulator.Core.Model.BreadboardHole)">
+            <summary>
+            Connects two breadboard nets with an ideal jumper.
+            </summary>
+            <param name="first">A hole on the first net.</param>
+            <param name="second">A hole on the second net.</param>
+            <remarks>
+            This method joins whole breadboard nets. It does not mark the two holes as occupied, so it can be used
+            as a logical wiring shortcut before or after component terminals are inserted.
+            </remarks>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Breadboard.AreConnected(CircuitSimulator.Core.Model.BreadboardHole,CircuitSimulator.Core.Model.BreadboardHole)">
+            <summary>
+            Determines whether two holes are connected by the native layout plus any added net jumpers.
+            </summary>
+            <param name="first">The first hole coordinate.</param>
+            <param name="second">The second hole coordinate.</param>
+            <returns><see langword="true"/> when the holes currently belong to the same breadboard net.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Breadboard.MarkNetAsGround(CircuitSimulator.Core.Model.BreadboardHole)">
+            <summary>
+            Marks the connected net containing the supplied hole as ground.
+            </summary>
+            <param name="hole">A hole on the net to mark as ground.</param>
+            <exception cref="T:CircuitSimulator.Core.Model.CircuitModelException">Thrown when no component terminal has been inserted into the net.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Breadboard.GetInsertedTerminal(CircuitSimulator.Core.Model.BreadboardHole)">
+            <summary>
+            Gets the inserted terminal for an occupied hole.
+            </summary>
+            <param name="hole">The breadboard hole coordinate.</param>
+            <returns>The inserted terminal identifier.</returns>
+            <exception cref="T:CircuitSimulator.Core.Model.CircuitModelException">Thrown when the hole is empty.</exception>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.Breadboard.TryGetInsertedTerminal(CircuitSimulator.Core.Model.BreadboardHole,CircuitSimulator.Core.Model.TerminalId@)">
+            <summary>
+            Attempts to get the inserted terminal for a hole.
+            </summary>
+            <param name="hole">The breadboard hole coordinate.</param>
+            <param name="terminal">The inserted terminal when the hole is occupied.</param>
+            <returns><see langword="true"/> when the hole is occupied.</returns>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.BreadboardRow">
+            <summary>
+            Identifies a terminal-strip row on a solderless breadboard.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.A">
+            <summary>Row A, connected vertically with rows B through E in the same column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.B">
+            <summary>Row B, connected vertically with rows A and C through E in the same column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.C">
+            <summary>Row C, connected vertically with rows A, B, D, and E in the same column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.D">
+            <summary>Row D, connected vertically with rows A through C and E in the same column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.E">
+            <summary>Row E, connected vertically with rows A through D in the same column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.F">
+            <summary>Row F, connected vertically with rows G through J in the same column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.G">
+            <summary>Row G, connected vertically with rows F and H through J in the same column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.H">
+            <summary>Row H, connected vertically with rows F, G, I, and J in the same column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.I">
+            <summary>Row I, connected vertically with rows F through H and J in the same column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardRow.J">
+            <summary>Row J, connected vertically with rows F through I in the same column.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.BreadboardPowerRail">
+            <summary>
+            Identifies one continuous red or blue power rail on the breadboard layout.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardPowerRail.TopNegative">
+            <summary>The upper blue negative rail.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardPowerRail.TopPositive">
+            <summary>The upper red positive rail.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardPowerRail.BottomNegative">
+            <summary>The lower blue negative rail.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardPowerRail.BottomPositive">
+            <summary>The lower red positive rail.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.BreadboardHoleKind">
+            <summary>
+            Identifies whether a breadboard coordinate is in the terminal strips or a power rail.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardHoleKind.TerminalStrip">
+            <summary>A hole in rows A through J.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardHoleKind.PowerRail">
+            <summary>A hole in a red or blue power rail.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.BreadboardNetKind">
+            <summary>
+            Identifies the native net group represented by a breadboard hole.
+            </summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardNetKind.TerminalStripAThroughE">
+            <summary>Rows A through E in one numbered column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardNetKind.TerminalStripFThroughJ">
+            <summary>Rows F through J in one numbered column.</summary>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardNetKind.PowerRail">
+            <summary>One continuous red or blue power rail.</summary>
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.BreadboardHole">
+            <summary>
+            Identifies one addressable hole in the standard breadboard layout.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BreadboardHole.Kind">
+            <summary>
+            Gets whether this coordinate is a terminal-strip hole or a power-rail hole.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BreadboardHole.Row">
+            <summary>
+            Gets the terminal-strip row for terminal-strip holes.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BreadboardHole.Rail">
+            <summary>
+            Gets the red or blue rail for power-rail holes.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BreadboardHole.Column">
+            <summary>
+            Gets the one-based column number.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardHole.TerminalStrip(CircuitSimulator.Core.Model.BreadboardRow,System.Int32)">
+            <summary>
+            Creates a coordinate for one hole in rows A through J.
+            </summary>
+            <param name="row">The terminal-strip row.</param>
+            <param name="column">The one-based column number.</param>
+            <returns>The breadboard hole coordinate.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardHole.PowerRail(CircuitSimulator.Core.Model.BreadboardPowerRail,System.Int32)">
+            <summary>
+            Creates a coordinate for one hole on a red or blue power rail.
+            </summary>
+            <param name="rail">The power rail.</param>
+            <param name="column">The one-based column number.</param>
+            <returns>The breadboard hole coordinate.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardHole.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.BreadboardNet">
+            <summary>
+            Identifies one native breadboard net before optional jumpers are applied.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BreadboardNet.Kind">
+            <summary>
+            Gets the net category.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BreadboardNet.Column">
+            <summary>
+            Gets the one-based column for terminal-strip nets, or <see langword="null"/> for power rails.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BreadboardNet.Rail">
+            <summary>
+            Gets the rail for power-rail nets, or <see langword="null"/> for terminal strips.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardNet.Equals(CircuitSimulator.Core.Model.BreadboardNet)">
+            <inheritdoc />
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardNet.Equals(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardNet.GetHashCode">
+            <inheritdoc />
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardNet.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:CircuitSimulator.Core.Model.BreadboardLayout">
+            <summary>
+            Describes the native ideal-wire topology of a solderless breadboard.
+            </summary>
+            <remarks>
+            The standard layout has 30 numbered columns. Rows A through E in the same column are connected,
+            rows F through J in the same column are connected, and each red or blue power rail is continuous
+            across all columns. The upper and lower rails are not connected to each other by default.
+            </remarks>
+        </member>
+        <member name="F:CircuitSimulator.Core.Model.BreadboardLayout.StandardColumnCount">
+            <summary>
+            Gets the default number of numbered terminal-strip columns.
+            </summary>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BreadboardLayout.Standard">
+            <summary>
+            Gets the standard 30-column breadboard layout.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardLayout.#ctor(System.Int32)">
+            <summary>
+            Initializes a new breadboard layout.
+            </summary>
+            <param name="columnCount">The number of one-based columns.</param>
+        </member>
+        <member name="P:CircuitSimulator.Core.Model.BreadboardLayout.ColumnCount">
+            <summary>
+            Gets the number of one-based columns in the layout.
+            </summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardLayout.GetNet(CircuitSimulator.Core.Model.BreadboardHole)">
+            <summary>
+            Gets the native ideal-wire net for a breadboard hole.
+            </summary>
+            <param name="hole">The breadboard hole coordinate.</param>
+            <returns>The native breadboard net.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardLayout.AreConnected(CircuitSimulator.Core.Model.BreadboardHole,CircuitSimulator.Core.Model.BreadboardHole)">
+            <summary>
+            Determines whether two holes share the same native breadboard connection.
+            </summary>
+            <param name="first">The first hole coordinate.</param>
+            <param name="second">The second hole coordinate.</param>
+            <returns><see langword="true"/> when the holes are internally connected by the board layout.</returns>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.BreadboardLayout.GetConnectedHoles(CircuitSimulator.Core.Model.BreadboardHole)">
+            <summary>
+            Gets all holes connected to the same native breadboard net as the supplied hole.
+            </summary>
+            <param name="hole">The breadboard hole coordinate.</param>
+            <returns>The connected hole coordinates in deterministic order.</returns>
+        </member>
         <member name="T:CircuitSimulator.Core.Model.Circuit">
             <summary>
             Immutable physical circuit definition containing components, terminals, ideal wires, and ground markers.
@@ -938,6 +1272,9 @@
         </member>
         <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddDiode(System.String,System.Double,System.Double,System.Double)">
             <summary>Adds a two-terminal Shockley diode.</summary>
+        </member>
+        <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddLed(System.String,System.Double,System.Double,System.Double,System.Double)">
+            <summary>Adds a two-terminal LED modeled as a Shockley diode fitted to a nominal forward operating point.</summary>
         </member>
         <member name="M:CircuitSimulator.Core.Model.CircuitBuilder.AddSwitch(System.String,System.Boolean)">
             <summary>Adds a controllable ideal two-terminal switch.</summary>

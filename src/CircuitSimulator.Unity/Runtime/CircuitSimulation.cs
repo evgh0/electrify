@@ -294,6 +294,12 @@ namespace CircuitSimulator.Unity
             return CreateComponent<Diode>(name);
         }
 
+        /// <summary>Creates and registers a default red indicator LED.</summary>
+        public Led AddLed(string name)
+        {
+            return CreateComponent<Led>(name);
+        }
+
         /// <summary>Creates and registers a latched ideal switch.</summary>
         public CircuitSwitch AddSwitch(string name, bool initiallyClosed = false)
         {

@@ -88,6 +88,7 @@ public sealed class TransientSample
                     (voltage - committedState.GetCapacitorState(component.ComponentId).PreviousVoltage),
                 InductorParameters => GetBranchCurrent(component.ComponentId),
                 DiodeParameters diode => DiodeModel.Evaluate(diode, voltage).Current,
+                LedParameters led => DiodeModel.Evaluate(led, voltage).Current,
                 SwitchParameters => GetBranchCurrent(component.ComponentId),
                 _ => throw new SimulationException(
                     $"Component '{component.Name}' ({component.ComponentId}) has unsupported parameters.")

@@ -4,7 +4,7 @@
 
 - .NET 8 SDK
 
-Reference `CircuitSimulator.Core` from your application. Within this repository, the console demonstration already has the required project reference.
+Reference `CircuitSimulator.Core` from your application.
 
 ## Build and solve a voltage divider
 
@@ -75,13 +75,3 @@ Alternatively, consume <xref:CircuitSimulator.Core.Simulation.RealtimeSimulation
 away from the render callback. It uses monotonic absolute deadlines for best-effort 1x pacing and catches
 up without skipping fixed integration steps. Rendering can read the latest immutable sample at any frame
 rate, while a separate collector can retain samples needed for charts.
-
-## Run the demonstration
-
-From the repository root:
-
-```bash
-dotnet run --project src/CircuitSimulator.Console/CircuitSimulator.Console.csproj
-```
-
-The demonstration prints the compiled nodes, terminal mapping, graph edges, MNA variables, assembled system, voltages, and component currents.

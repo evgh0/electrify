@@ -36,6 +36,11 @@ public enum ComponentKind
     Diode,
 
     /// <summary>
+    /// A two-terminal LED modeled as a Shockley diode fitted to a nominal forward operating point.
+    /// </summary>
+    Led,
+
+    /// <summary>
     /// A controllable ideal two-terminal switch.
     /// </summary>
     Switch

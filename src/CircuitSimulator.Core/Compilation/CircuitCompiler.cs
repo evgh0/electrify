@@ -209,6 +209,7 @@ public sealed class CircuitCompiler
             ComponentKind.Capacitor => component.Parameters is CapacitorParameters,
             ComponentKind.Inductor => component.Parameters is InductorParameters,
             ComponentKind.Diode => component.Parameters is DiodeParameters,
+            ComponentKind.Led => component.Parameters is LedParameters,
             ComponentKind.Switch => component.Parameters is SwitchParameters,
             _ => false
         };

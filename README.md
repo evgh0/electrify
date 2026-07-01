@@ -7,52 +7,13 @@ This repository contains a .NET 8 electrical circuit simulation core built aroun
 ```text
 CircuitSimulator.sln
 src/CircuitSimulator.Core
-src/CircuitSimulator.Console
-src/CircuitSimulator.Editor.Contracts
-src/CircuitSimulator.Editor
-src/CircuitSimulator.Editor.App
-src/CircuitSimulator.RealtimeDemo
 src/CircuitSimulator.Unity
 tests/CircuitSimulator.Core.Tests
-tests/CircuitSimulator.Editor.Tests
-tests/CircuitSimulator.RealtimeDemo.Tests
 ```
 
-`CircuitSimulator.Core` contains the physical model, topology compiler, validation, MNA assembly, Math.NET-backed linear solving, linear and nonlinear DC operating points, bounded backward-Euler transient simulation, and ongoing fixed-step realtime sessions. The console project is a demonstration only.
-
-The editor projects add an Avalonia transient showcase without introducing any Avalonia dependency into the simulation core. `Editor.Contracts` owns fixed schematic geometry, `Editor` owns demo definitions, orchestration, chart data, and custom rendering, and `Editor.App` is the desktop host.
+`CircuitSimulator.Core` contains the physical model, topology compiler, validation, MNA assembly, Math.NET-backed linear solving, linear and nonlinear DC operating points, bounded backward-Euler transient simulation, and ongoing fixed-step realtime sessions.
 
 `CircuitSimulator.Unity` is a Git-installable Unity Package Manager package for Unity 6. It provides typed passive devices, sources, ideal switches, momentary buttons, terminal/wire authoring, automatic hierarchy registration, frame-driven realtime simulation, mapped readings, runtime creation/deletion helpers, inspectors, gizmos, tests, and an RC sample. Install `https://github.com/evgh0/electrify.git?path=/src/CircuitSimulator.Unity` through Unity Package Manager. The package contains .NET Standard 2.1 builds of Core and Math.NET, while Core remains independent of Unity.
-
-## Avalonia transient lab
-
-Run the Avalonia workbench:
-
-```bash
-dotnet run --project src/CircuitSimulator.Editor.App/CircuitSimulator.Editor.App.csproj
-```
-
-The dark VS Code/Obsidian-inspired workbench includes three deterministic examples:
-
-- RC charging from a 5 V step;
-- RL current response from a 5 V step;
-- a nonlinear 50 Hz diode rectifier with smoothing capacitor and load.
-
-Select a component from the list or circuit drawing to inspect synchronized voltage, current, and instantaneous-power traces. Hover the chart or use the arrow keys to move its shared sample cursor. The inspector accepts engineering values such as `4.7k`, `100u`, and `10m`; **Apply & Run** validates the fields, rebuilds the immutable circuit, and starts a cancellable background simulation.
-
-The showcase uses fixed circuit topologies. General placement, wiring, undo/redo, persistence, and document tabs remain deferred full-editor work.
-
-## Standalone realtime demo
-
-Run the independent realtime RC filter demonstration:
-
-```bash
-dotnet run --project src/CircuitSimulator.RealtimeDemo/CircuitSimulator.RealtimeDemo.csproj
-```
-
-This project references `CircuitSimulator.Core` directly and does not depend on the Editor projects. It continuously simulates a predefined 1 Hz two-stage RC low-pass filter using a fixed 5 ms timestep. The left side shows a rolling ten-second voltage/current/power chart, while the right side shows the fixed schematic. Select a component from the dropdown or click its symbol; selection changes presentation only and does not restart the simulation.
-
-The sample stream runs away from the Avalonia render callback. A bounded rolling buffer retains only the newest ten seconds, and the UI publishes immutable snapshots at approximately 30 frames per second.
 
 ## Physical Model
 
@@ -75,10 +36,47 @@ Supported components:
 - independent voltage source, in volts;
 - capacitor, in farads;
 - inductor, in henries;
-- Shockley diode.
+- Shockley diode;
+- LED modeled as a Shockley diode fitted to a nominal forward voltage/current point.
 - controllable ideal switch.
 
 Reactive/passive parameters must be finite and greater than zero. Source values must be finite. Independent voltage and current sources can use constant or sinusoidal time-domain waveforms while retaining a separate DC operating-point value.
+
+## Breadboard Routing
+
+`Breadboard` is a Core routing helper built on top of `CircuitBuilder`. It does not add a solver component or create empty-hole MNA variables; instead, it maps a 30-column solderless breadboard layout to ordinary ideal wires between terminals that you insert.
+
+The standard layout matches the common center-gap breadboard:
+
+- rows A-E in the same column are connected;
+- rows F-J in the same column are connected;
+- each red or blue power rail is continuous across columns 1-30;
+- top and bottom rails are separate unless connected with a jumper.
+
+```csharp
+var builder = new CircuitBuilder();
+var board = new Breadboard(builder);
+
+var source = builder.AddVoltageSource("V1", 5.0);
+var resistor = builder.AddResistor("R1", 1_000.0);
+
+var redRail = BreadboardHole.PowerRail(BreadboardPowerRail.TopPositive, 1);
+var blueRail = BreadboardHole.PowerRail(BreadboardPowerRail.TopNegative, 1);
+var stripPositive = BreadboardHole.TerminalStrip(BreadboardRow.C, 10);
+var stripNegative = BreadboardHole.TerminalStrip(BreadboardRow.H, 10);
+
+board.ConnectNets(redRail, stripPositive);
+board.ConnectNets(blueRail, stripNegative);
+
+board.Insert(redRail, source.Positive);
+board.Insert(blueRail, source.Negative);
+board.Insert(stripPositive, resistor.Positive);
+board.Insert(stripNegative, resistor.Negative);
+board.MarkNetAsGround(blueRail);
+
+var result = new DcOperatingPointSolver().Solve(builder.Build());
+double resistorCurrent = result.GetComponentCurrent(resistor.ComponentId);
+```
 
 ## Compilation
 
@@ -152,7 +150,7 @@ Component stamps depend on `IMnaSystemBuilder`, not on Math.NET matrices.
 
 The solver never inverts a matrix. It detects singular or near-singular pivots, preserves input `MnaLinearSystem` snapshots, validates finite solution values, and handles zero-dimensional systems.
 
-For nonlinear circuits, `DcOperatingPointSolver` applies Newton-Raphson to affine diode tangent stamps. Convergence uses absolute and relative correction limits, with bounded diode-voltage steps and a differentiable high-voltage continuation of the exponential to avoid overflow.
+For nonlinear circuits, `DcOperatingPointSolver` applies Newton-Raphson to affine diode and LED tangent stamps. Convergence uses absolute and relative correction limits, with bounded Shockley-device voltage steps and a differentiable high-voltage continuation of the exponential to avoid overflow.
 
 ## Transient simulation
 
@@ -251,12 +249,6 @@ V(node 2) = 6.6666666667 V
 I(V1)     = -0.003333333333 A
 I(R1)     =  0.003333333333 A
 I(R2)     =  0.003333333333 A
-```
-
-Run the demonstration:
-
-```bash
-dotnet run --project src/CircuitSimulator.Console/CircuitSimulator.Console.csproj
 ```
 
 ## Documentation

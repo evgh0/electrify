@@ -2,9 +2,5 @@
   href: index.md
 - name: Getting started
   href: getting-started.md
-- name: Interactive editor
-  href: editor.md
-- name: Realtime demo
-  href: realtime-demo.md
 - name: API reference
   href: api/toc.yml

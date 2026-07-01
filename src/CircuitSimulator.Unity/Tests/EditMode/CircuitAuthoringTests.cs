@@ -106,5 +106,29 @@ namespace CircuitSimulator.Unity.Tests
             button.Press();
             Assert.That(button.IsElectricallyClosed, Is.False);
         }
+
+        [Test]
+        public void LedFactoryPublishesElectricalReadingAndParameterChangesMarkDirty()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var resistor = simulation.AddResistor("R1", 150.0);
+            var led = simulation.AddLed("LED1");
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, led.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            simulation.Connect(resistor.Negative, led.Positive);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(led.HasReading, Is.True);
+            Assert.That(double.IsFinite(led.Voltage), Is.True);
+            Assert.That(double.IsFinite(led.Current), Is.True);
+            Assert.That(led.Current, Is.GreaterThan(0.0));
+            Assert.That(simulation.IsDirty, Is.False);
+
+            led.NominalForwardVoltage = 2.1;
+
+            Assert.That(simulation.IsDirty, Is.True);
+        }
     }
 }

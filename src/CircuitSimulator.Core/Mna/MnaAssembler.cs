@@ -20,6 +20,7 @@ public sealed class MnaAssembler
             [ComponentKind.Capacitor] = new CapacitorMnaStamp(),
             [ComponentKind.Inductor] = new InductorMnaStamp(),
             [ComponentKind.Diode] = new DiodeMnaStamp(),
+            [ComponentKind.Led] = new LedMnaStamp(),
             [ComponentKind.Switch] = new SwitchMnaStamp()
         };
     }
@@ -326,6 +327,58 @@ public sealed class MnaAssembler
         private static void Stamp(
             CompiledComponent component,
             DiodeParameters parameters,
+            MnaStampContext context,
+            IReadOnlyList<double> solutionEstimate,
+            IMnaSystemBuilder builder)
+        {
+            var nodes = GetNodes(component, context);
+            var voltage = GetValue(nodes.Positive, solutionEstimate) - GetValue(nodes.Negative, solutionEstimate);
+            var linearization = DiodeModel.Evaluate(parameters, voltage);
+            MnaStamps.StampConductance(builder, nodes.Positive, nodes.Negative, linearization.Conductance);
+            MnaStamps.StampCurrentSource(builder, nodes.Positive, nodes.Negative, linearization.EquivalentCurrent);
+        }
+
+        private static double GetValue(Model.VariableIndex? index, IReadOnlyList<double> solution) =>
+            index is null ? 0.0 : solution[index.Value.Value];
+    }
+
+    private sealed class LedMnaStamp : ComponentMnaStamp<LedParameters>
+    {
+        protected override void StampDc(
+            CompiledComponent component,
+            LedParameters parameters,
+            MnaStampContext context,
+            NonlinearStampContext? nonlinearContext,
+            IMnaSystemBuilder builder)
+        {
+            if (nonlinearContext is null)
+            {
+                throw new MnaAssemblyException(
+                    $"LED '{component.Name}' ({component.ComponentId}) requires a nonlinear solution estimate.");
+            }
+
+            Stamp(component, parameters, context, nonlinearContext.SolutionEstimate, builder);
+        }
+
+        protected override void StampTransient(
+            CompiledComponent component,
+            LedParameters parameters,
+            MnaStampContext context,
+            TransientStampContext transientContext,
+            IMnaSystemBuilder builder)
+        {
+            if (transientContext.SolutionEstimate is null)
+            {
+                throw new MnaAssemblyException(
+                    $"LED '{component.Name}' ({component.ComponentId}) requires a nonlinear solution estimate.");
+            }
+
+            Stamp(component, parameters, context, transientContext.SolutionEstimate, builder);
+        }
+
+        private static void Stamp(
+            CompiledComponent component,
+            LedParameters parameters,
             MnaStampContext context,
             IReadOnlyList<double> solutionEstimate,
             IMnaSystemBuilder builder)

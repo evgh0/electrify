@@ -145,6 +145,7 @@ public sealed class DcOperatingPointResult
             CapacitorParameters => 0.0,
             InductorParameters => GetBranchCurrent(componentId),
             DiodeParameters diode => DiodeModel.Evaluate(diode, GetComponentVoltage(componentId)).Current,
+            LedParameters led => DiodeModel.Evaluate(led, GetComponentVoltage(componentId)).Current,
             SwitchParameters => GetBranchCurrent(componentId),
             _ => throw new SimulationException($"Component '{component.Name}' ({component.ComponentId}) has unsupported parameters.")
         };

@@ -195,4 +195,101 @@ namespace CircuitSimulator.Unity
             }
         }
     }
+
+    /// <summary>A two-terminal LED modeled as a Shockley diode fitted to a nominal forward operating point.</summary>
+    [DisallowMultipleComponent]
+    public sealed class Led : TwoTerminalCircuitComponent
+    {
+        [SerializeField]
+        [Min(float.Epsilon)]
+        private double nominalForwardVoltage = 2.0;
+
+        [SerializeField]
+        [Min(float.Epsilon)]
+        private double referenceCurrent = 0.02;
+
+        [SerializeField]
+        [Min(float.Epsilon)]
+        private double idealityFactor = 2.0;
+
+        [SerializeField]
+        [Min(float.Epsilon)]
+        private double thermalVoltage = 0.025851999786;
+
+        /// <summary>Gets or sets nominal forward voltage in volts.</summary>
+        public double NominalForwardVoltage
+        {
+            get => nominalForwardVoltage;
+            set => SetPositiveFinite(ref nominalForwardVoltage, value, nameof(value));
+        }
+
+        /// <summary>Gets or sets reference forward current in amperes.</summary>
+        public double ReferenceCurrent
+        {
+            get => referenceCurrent;
+            set => SetPositiveFinite(ref referenceCurrent, value, nameof(value));
+        }
+
+        /// <summary>Gets or sets the LED emission ideality factor.</summary>
+        public double IdealityFactor
+        {
+            get => idealityFactor;
+            set => SetPositiveFinite(ref idealityFactor, value, nameof(value));
+        }
+
+        /// <summary>Gets or sets thermal voltage in volts.</summary>
+        public double ThermalVoltage
+        {
+            get => thermalVoltage;
+            set => SetPositiveFinite(ref thermalVoltage, value, nameof(value));
+        }
+
+        /// <summary>Configures all LED model values atomically.</summary>
+        public void Configure(
+            double newNominalForwardVoltage,
+            double newReferenceCurrent,
+            double newIdealityFactor,
+            double newThermalVoltage)
+        {
+            ValidatePositiveFinite(newNominalForwardVoltage, nameof(newNominalForwardVoltage));
+            ValidatePositiveFinite(newReferenceCurrent, nameof(newReferenceCurrent));
+            ValidatePositiveFinite(newIdealityFactor, nameof(newIdealityFactor));
+            ValidatePositiveFinite(newThermalVoltage, nameof(newThermalVoltage));
+            nominalForwardVoltage = newNominalForwardVoltage;
+            referenceCurrent = newReferenceCurrent;
+            idealityFactor = newIdealityFactor;
+            thermalVoltage = newThermalVoltage;
+            NotifyCircuitChanged();
+        }
+
+        internal override TwoTerminalComponentHandle AddTo(CircuitBuilder builder, string coreName)
+        {
+            return builder.AddLed(
+                coreName,
+                nominalForwardVoltage,
+                referenceCurrent,
+                idealityFactor,
+                thermalVoltage);
+        }
+
+        private void SetPositiveFinite(ref double field, double value, string parameterName)
+        {
+            ValidatePositiveFinite(value, parameterName);
+            if (field.Equals(value))
+            {
+                return;
+            }
+
+            field = value;
+            NotifyCircuitChanged();
+        }
+
+        private static void ValidatePositiveFinite(double value, string parameterName)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value) || value <= 0.0)
+            {
+                throw new ArgumentOutOfRangeException(parameterName, value, "LED parameters must be finite and greater than zero.");
+            }
+        }
+    }
 }

@@ -9,12 +9,36 @@ public static class DiodeModel
     public static DiodeLinearization Evaluate(DiodeParameters parameters, double voltage)
     {
         Guard.NotNull(parameters, nameof(parameters));
+        return Evaluate(
+            parameters.SaturationCurrent,
+            parameters.IdealityFactor,
+            parameters.ThermalVoltage,
+            voltage);
+    }
+
+    /// <summary>Evaluates current, conductance, and equivalent-source current at an LED voltage.</summary>
+    public static DiodeLinearization Evaluate(LedParameters parameters, double voltage)
+    {
+        Guard.NotNull(parameters, nameof(parameters));
+        return Evaluate(
+            parameters.SaturationCurrent,
+            parameters.IdealityFactor,
+            parameters.ThermalVoltage,
+            voltage);
+    }
+
+    private static DiodeLinearization Evaluate(
+        double saturationCurrent,
+        double idealityFactor,
+        double thermalVoltage,
+        double voltage)
+    {
         if (!Guard.IsFinite(voltage))
         {
             throw new ArgumentOutOfRangeException(nameof(voltage), voltage, "Diode voltage must be finite.");
         }
 
-        var voltageScale = parameters.IdealityFactor * parameters.ThermalVoltage;
+        var voltageScale = idealityFactor * thermalVoltage;
         var exponent = voltage / voltageScale;
         double exponential;
         double exponentialDerivative;
@@ -31,8 +55,8 @@ public static class DiodeModel
             exponentialDerivative = thresholdValue;
         }
 
-        var current = parameters.SaturationCurrent * (exponential - 1.0);
-        var conductance = parameters.SaturationCurrent * exponentialDerivative / voltageScale;
+        var current = saturationCurrent * (exponential - 1.0);
+        var conductance = saturationCurrent * exponentialDerivative / voltageScale;
         var equivalentCurrent = current - (conductance * voltage);
         if (!Guard.IsFinite(current) || !Guard.IsFinite(conductance) || !Guard.IsFinite(equivalentCurrent))
         {

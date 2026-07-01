@@ -90,6 +90,19 @@ public sealed class CircuitBuilder
             "A",
             "K");
 
+    /// <summary>Adds a two-terminal LED modeled as a Shockley diode fitted to a nominal forward operating point.</summary>
+    public TwoTerminalComponentHandle AddLed(
+        string name,
+        double nominalForwardVoltage = LedParameters.DefaultNominalForwardVoltage,
+        double referenceCurrent = LedParameters.DefaultReferenceCurrent,
+        double idealityFactor = LedParameters.DefaultIdealityFactor,
+        double thermalVoltage = DiodeParameters.DefaultThermalVoltage) =>
+        AddTwoTerminalComponent(
+            name,
+            new LedParameters(nominalForwardVoltage, referenceCurrent, idealityFactor, thermalVoltage),
+            "A",
+            "K");
+
     /// <summary>Adds a controllable ideal two-terminal switch.</summary>
     /// <param name="name">The unique component name.</param>
     /// <param name="initiallyClosed">

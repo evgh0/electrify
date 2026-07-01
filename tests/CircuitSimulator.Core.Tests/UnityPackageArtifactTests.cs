@@ -25,6 +25,7 @@ public sealed class UnityPackageArtifactTests
 
         var packagedAssembly = Assembly.LoadFile(corePath);
         Assert.NotNull(packagedAssembly.GetType("CircuitSimulator.Core.Components.SwitchParameters"));
+        Assert.NotNull(packagedAssembly.GetType("CircuitSimulator.Core.Components.LedParameters"));
         Assert.NotNull(
             packagedAssembly
                 .GetType("CircuitSimulator.Core.Simulation.RealtimeSimulationSession")

@@ -7,7 +7,7 @@ namespace CircuitSimulator.Core.Simulation;
 internal static class NonlinearCircuitUtilities
 {
     public static bool ContainsNonlinearComponents(CompiledCircuit circuit) =>
-        circuit.Components.Any(component => component.Kind == ComponentKind.Diode);
+        circuit.Components.Any(static component => IsShockleyDevice(component.Kind));
 
     public static double[] LimitDiodeVoltageStep(
         CompiledCircuit circuit,
@@ -16,7 +16,7 @@ internal static class NonlinearCircuitUtilities
         double maximumVoltageStep)
     {
         var scale = 1.0;
-        foreach (var diode in circuit.Components.Where(component => component.Kind == ComponentKind.Diode))
+        foreach (var diode in circuit.Components.Where(static component => IsShockleyDevice(component.Kind)))
         {
             var currentVoltage = GetComponentVoltage(circuit, diode, current);
             var candidateVoltage = GetComponentVoltage(circuit, diode, candidate);
@@ -51,4 +51,7 @@ internal static class NonlinearCircuitUtilities
         var index = circuit.VariableMap.GetNodeVoltageIndex(nodeId);
         return index is null ? 0.0 : solution[index.Value.Value];
     }
+
+    private static bool IsShockleyDevice(ComponentKind kind) =>
+        kind is ComponentKind.Diode or ComponentKind.Led;
 }

@@ -45,9 +45,38 @@ public sealed class NonlinearSimulationTests
     }
 
     [Fact]
+    public void SolvesResistorLedDcOperatingPointNearNominalForwardPoint()
+    {
+        var (circuit, led, resistor) = CreateLedCircuit(5.0, 150.0);
+
+        var result = new DcOperatingPointSolver().Solve(circuit);
+        var ledVoltage = result.GetComponentVoltage(led.ComponentId);
+        var resistorCurrent = result.GetComponentCurrent(resistor.ComponentId);
+        var ledCurrent = result.GetComponentCurrent(led.ComponentId);
+
+        AssertEx.NearlyEqual(2.0, ledVoltage, 1e-4);
+        AssertEx.NearlyEqual(0.02, ledCurrent, 1e-5);
+        AssertEx.NearlyEqual(resistorCurrent, ledCurrent, 1e-7);
+        AssertEx.NearlyEqual((5.0 - ledVoltage) / 150.0, ledCurrent, 1e-7);
+    }
+
+    [Fact]
     public void ReportsNonlinearConvergenceFailure()
     {
         var (circuit, _, _) = CreateDiodeCircuit(5.0, 1_000.0);
+        var options = new NewtonRaphsonOptions(maximumIterations: 1);
+
+        var exception = Assert.Throws<NonlinearConvergenceException>(() =>
+            new DcOperatingPointSolver(newtonOptions: options).Solve(circuit));
+
+        Assert.Equal(1, exception.IterationCount);
+        Assert.True(exception.MaximumCorrection > 0.0);
+    }
+
+    [Fact]
+    public void ReportsLedNonlinearConvergenceFailure()
+    {
+        var (circuit, _, _) = CreateLedCircuit(5.0, 150.0);
         var options = new NewtonRaphsonOptions(maximumIterations: 1);
 
         var exception = Assert.Throws<NonlinearConvergenceException>(() =>
@@ -107,6 +136,22 @@ public sealed class NonlinearSimulationTests
     }
 
     [Fact]
+    public void SolvesLedTransientSampleWithFiniteCurrent()
+    {
+        var (circuit, led, resistor) = CreateLedCircuit(5.0, 150.0);
+
+        var result = new TransientSimulationSolver().Solve(
+            circuit,
+            new TransientSimulationOptions(0.0, 1e-3, 1e-3));
+        var sample = result.Samples.Single();
+        var ledCurrent = sample.GetComponentCurrent(led.ComponentId);
+
+        Assert.True(double.IsFinite(sample.GetComponentVoltage(led.ComponentId)));
+        Assert.True(double.IsFinite(ledCurrent));
+        AssertEx.NearlyEqual(sample.GetComponentCurrent(resistor.ComponentId), ledCurrent, 1e-7);
+    }
+
+    [Fact]
     public void TransientConvergenceFailureReportsTheRejectedStepTime()
     {
         var (circuit, _, _) = CreateDiodeCircuit(5.0, 1_000.0);
@@ -137,5 +182,21 @@ public sealed class NonlinearSimulationTests
         builder.Connect(source.Positive, resistor.Positive);
         builder.Connect(resistor.Negative, diode.Positive);
         return (builder.Build(), diode, resistor);
+    }
+
+    private static (
+        Circuit Circuit,
+        TwoTerminalComponentHandle Led,
+        TwoTerminalComponentHandle Resistor) CreateLedCircuit(double voltage, double resistance)
+    {
+        var builder = new CircuitBuilder();
+        var source = builder.AddVoltageSource("V1", voltage);
+        var resistor = builder.AddResistor("R1", resistance);
+        var led = builder.AddLed("LED1");
+        builder.Connect(source.Negative, led.Negative);
+        builder.MarkAsGround(source.Negative);
+        builder.Connect(source.Positive, resistor.Positive);
+        builder.Connect(resistor.Negative, led.Positive);
+        return (builder.Build(), led, resistor);
     }
 }
