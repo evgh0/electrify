@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Merged the realtime simulation engine into the Unity package source.
+- Removed the packaged Core DLL and standalone offline solver distribution.
+- Kept Math.NET Numerics as the package's only managed plug-in.
+- Added Unity coverage for realtime RL stepping, sinusoidal sources, transactional failed steps, and voltage-source self-loop diagnostics.
+
 ## 1.1.0
 
 - Added stateful ideal switches and normally-open/normally-closed momentary buttons.

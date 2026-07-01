@@ -56,6 +56,38 @@ namespace CircuitSimulator.Unity.Tests
         }
 
         [Test]
+        public void ConstantVoltageSourceSelfLoopProducesStructuredFailure()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            simulation.Connect(source.Positive, source.Negative);
+            simulation.SetGround(source.Negative);
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Circuit simulation rebuild failed"));
+
+            Assert.That(simulation.Rebuild(), Is.False);
+            Assert.That(simulation.State, Is.EqualTo(CircuitSimulationState.Faulted));
+            Assert.That(
+                simulation.ValidationIssues,
+                Has.Some.Matches<CircuitDiagnostic>(
+                    issue => issue.Code == "VOLTAGE_SOURCE_SELF_LOOP_NONZERO"));
+        }
+
+        [Test]
+        public void SinusoidalVoltageSourceSelfLoopProducesStructuredFailure()
+        {
+            var source = simulation.AddSinusoidalVoltageSource("V1", 0.0, 5.0, 1.0);
+            simulation.Connect(source.Positive, source.Negative);
+            simulation.SetGround(source.Negative);
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Circuit simulation rebuild failed"));
+
+            Assert.That(simulation.Rebuild(), Is.False);
+            Assert.That(simulation.State, Is.EqualTo(CircuitSimulationState.Faulted));
+            Assert.That(
+                simulation.ValidationIssues,
+                Has.Some.Matches<CircuitDiagnostic>(
+                    issue => issue.Code == "VOLTAGE_SOURCE_SELF_LOOP_NONZERO"));
+        }
+
+        [Test]
         public void DeleteComponentCascadesAttachedWires()
         {
             var source = simulation.AddVoltageSource("V1", 5.0);

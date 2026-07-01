@@ -37,6 +37,53 @@ namespace CircuitSimulator.Unity.Tests
         }
 
         [UnityTest]
+        public IEnumerator ManualRlStepMapsInductorReading()
+        {
+            var root = new GameObject("RL Circuit");
+            var simulation = root.AddComponent<CircuitSimulation>();
+            simulation.AutomaticStepping = false;
+            simulation.TimeStep = 1.0;
+            var source = simulation.AddVoltageSource("V1", 1.0);
+            var resistor = simulation.AddResistor("R1", 1.0);
+            var inductor = simulation.AddInductor("L1", 1.0);
+            simulation.Connect(source.Negative, inductor.Negative);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            simulation.Connect(resistor.Negative, inductor.Positive);
+
+            Assert.That(simulation.StartSimulation(), Is.True);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(inductor.Current, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(inductor.Current, Is.EqualTo(0.75).Within(1e-9));
+
+            Object.Destroy(root);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator SinusoidalVoltageSourceEvaluatesAtAcceptedStepTime()
+        {
+            var root = new GameObject("Sinusoidal Circuit");
+            var simulation = root.AddComponent<CircuitSimulation>();
+            simulation.AutomaticStepping = false;
+            simulation.TimeStep = 1.0;
+            var source = simulation.AddSinusoidalVoltageSource("V1", 0.0, 1.0, 0.25);
+            var load = simulation.AddResistor("R1", 1.0);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Positive, load.Positive);
+
+            Assert.That(simulation.StartSimulation(), Is.True);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(load.Voltage, Is.EqualTo(1.0).Within(1e-9));
+            Assert.That(load.Current, Is.EqualTo(1.0).Within(1e-9));
+
+            Object.Destroy(root);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator PauseAndParameterEditResetTheSession()
         {
             var root = new GameObject("Circuit");
@@ -156,6 +203,42 @@ namespace CircuitSimulator.Unity.Tests
             Assert.That(simulation.Step(), Is.True);
             Assert.That(simulation.CurrentTime, Is.EqualTo(0.5).Within(1e-9));
             Assert.That(simulation.LastFailure, Is.Null);
+
+            Object.Destroy(root);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator FailedSwitchedCapacitorStepDoesNotCommitTimeOrReading()
+        {
+            var root = new GameObject("Transactional RC");
+            var simulation = root.AddComponent<CircuitSimulation>();
+            simulation.AutomaticStepping = false;
+            simulation.TimeStep = 1.0;
+            var source = simulation.AddVoltageSource("V1", 1.0);
+            var resistor = simulation.AddResistor("R1", 1.0);
+            var capacitor = simulation.AddCapacitor("C1", 1.0);
+            var groundSwitch = simulation.AddSwitch("S1", initiallyClosed: true);
+            simulation.Connect(source.Negative, capacitor.Negative);
+            simulation.Connect(source.Negative, groundSwitch.Positive);
+            simulation.SetGround(groundSwitch.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            simulation.Connect(resistor.Negative, capacitor.Positive);
+
+            Assert.That(simulation.StartSimulation(), Is.True);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(capacitor.Voltage, Is.EqualTo(0.5).Within(1e-9));
+
+            groundSwitch.Open();
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Circuit simulation step failed"));
+            Assert.That(simulation.Step(), Is.False);
+            Assert.That(simulation.CurrentTime, Is.EqualTo(1.0).Within(1e-9));
+            Assert.That(capacitor.Voltage, Is.EqualTo(0.5).Within(1e-9));
+
+            groundSwitch.Close();
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(simulation.CurrentTime, Is.EqualTo(2.0).Within(1e-9));
+            Assert.That(capacitor.Voltage, Is.EqualTo(0.75).Within(1e-9));
 
             Object.Destroy(root);
             yield return null;
