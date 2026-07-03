@@ -17,7 +17,7 @@ internal sealed class NewtonRaphsonSolver
 
     /// <summary>Initializes a Newton-Raphson solver.</summary>
     public NewtonRaphsonSolver(ILinearSystemSolver? linearSolver = null) =>
-        _linearSolver = linearSolver ?? new MathNetLinearSystemSolver();
+        _linearSolver = linearSolver ?? new DenseLinearSystemSolver();
 
     /// <summary>Solves a nonlinear system represented by affine tangent systems.</summary>
     public double[] Solve(

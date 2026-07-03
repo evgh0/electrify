@@ -10,7 +10,7 @@ Add the repository as a Git dependency with the package path:
 https://github.com/evgh0/electrify.git?path=/src/CircuitSimulator.Unity
 ```
 
-The consuming project must use Unity 6000.0 or later and the .NET Standard 2.1 API compatibility level. The simulator source is compiled with the package; Math.NET Numerics is included as the only managed plug-in.
+The consuming project must use Unity 6000.0 or later and the .NET Standard 2.1 API compatibility level. The simulator source and dense linear solver are compiled directly with the package, with no managed plug-in dependency.
 
 ## Minimal runtime circuit
 

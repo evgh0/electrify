@@ -48,7 +48,7 @@ internal sealed class RealtimeSimulationSession
             startTime: 0.0,
             options.InitialConditions,
             options.NewtonOptions,
-            linearSystemSolver ?? new MathNetLinearSystemSolver(),
+            linearSystemSolver ?? new DenseLinearSystemSolver(),
             assembler ?? new MnaAssembler());
     }
 

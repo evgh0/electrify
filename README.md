@@ -8,7 +8,7 @@ Install it through Unity Package Manager with the package path:
 https://github.com/evgh0/electrify.git?path=/src/CircuitSimulator.Unity
 ```
 
-The package targets Unity 6000.0 or later with the .NET Standard 2.1 API compatibility level. The numerical engine is compiled as package source under `src/CircuitSimulator.Unity/Runtime/Core`; Math.NET Numerics remains packaged as the linear algebra backend.
+The package targets Unity 6000.0 or later with the .NET Standard 2.1 API compatibility level. The numerical engine is compiled as package source under `src/CircuitSimulator.Unity/Runtime/Core`, including an in-package dense linear solver.
 
 ## Supported Runtime Features
 

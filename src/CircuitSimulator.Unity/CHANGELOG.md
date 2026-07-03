@@ -4,6 +4,7 @@
 
 - Added readable ideal jumper components with zero-voltage MNA stamping and positive-to-negative branch-current readings.
 - Added runtime jumper factories, jumper gizmos, documentation, and Unity test coverage.
+- Removed the Math.NET Numerics managed plug-in and replaced it with an in-package dense linear solver.
 
 ## 1.2.0
 
