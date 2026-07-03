@@ -218,6 +218,7 @@ internal sealed class CircuitCompiler
             ComponentKind.Diode => component.Parameters is DiodeParameters,
             ComponentKind.Led => component.Parameters is LedParameters,
             ComponentKind.Switch => component.Parameters is SwitchParameters,
+            ComponentKind.Jumper => component.Parameters is JumperParameters,
             _ => false
         };
 
@@ -327,6 +328,15 @@ internal sealed class CircuitCompiler
                     ValidationCodes.MnaSingularSystem,
                     ValidationSeverity.Error,
                     $"Initially closed switch '{component.Name}' ({component.ComponentId}) is a self-loop and would add a redundant MNA constraint.",
+                    componentId: component.ComponentId,
+                    nodeId: component.Nodes[0]));
+            }
+            else if (component.Parameters is JumperParameters)
+            {
+                issues.Add(new CircuitValidationIssue(
+                    ValidationCodes.MnaSingularSystem,
+                    ValidationSeverity.Error,
+                    $"Jumper '{component.Name}' ({component.ComponentId}) is a self-loop and would add a redundant MNA constraint.",
                     componentId: component.ComponentId,
                     nodeId: component.Nodes[0]));
             }

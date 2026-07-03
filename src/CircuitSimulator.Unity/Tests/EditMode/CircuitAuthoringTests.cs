@@ -162,5 +162,71 @@ namespace CircuitSimulator.Unity.Tests
 
             Assert.That(simulation.IsDirty, Is.True);
         }
+
+        [Test]
+        public void JumperFactoryCreatesReadableComponentAndRebuilds()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var jumper = simulation.AddJumper("J1");
+            var load = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.Connect(source.Positive, jumper.Positive);
+            simulation.Connect(jumper.Negative, load.Positive);
+
+            Assert.That(jumper.Positive, Is.Not.Null);
+            Assert.That(jumper.Negative, Is.Not.Null);
+            Assert.That(simulation.Rebuild(), Is.True);
+            Assert.That(simulation.IsDirty, Is.False);
+        }
+
+        [Test]
+        public void JumperEndpointFactoryCreatesAttachedConnections()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var load = simulation.AddResistor("R1", 1000.0);
+            var jumper = simulation.AddJumper("J1", source.Positive, load.Positive);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+
+            var wires = simulation.GetComponentsInChildren<CircuitWire>(true);
+
+            Assert.That(jumper, Is.Not.Null);
+            Assert.That(wires.Length, Is.EqualTo(3));
+            Assert.That(simulation.Rebuild(), Is.True);
+        }
+
+        [Test]
+        public void JumperSelfLoopProducesStructuredFailure()
+        {
+            var jumper = simulation.AddJumper("J1");
+            simulation.Connect(jumper.Positive, jumper.Negative);
+            simulation.SetGround(jumper.Positive);
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Circuit simulation rebuild failed"));
+
+            Assert.That(simulation.Rebuild(), Is.False);
+            Assert.That(simulation.State, Is.EqualTo(CircuitSimulationState.Faulted));
+            Assert.That(
+                simulation.ValidationIssues,
+                Has.Some.Matches<CircuitDiagnostic>(
+                    issue => issue.Code == "MNA_SINGULAR_SYSTEM"));
+        }
+
+        [Test]
+        public void DeleteJumperCascadesAttachedWires()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var jumper = simulation.AddJumper("J1");
+            var load = simulation.AddResistor("R1", 1000.0);
+            var firstWire = simulation.Connect(source.Positive, jumper.Positive);
+            var secondWire = simulation.Connect(jumper.Negative, load.Positive);
+
+            simulation.DeleteComponent(jumper);
+
+            Assert.That(jumper == null, Is.True);
+            Assert.That(firstWire == null, Is.True);
+            Assert.That(secondWire == null, Is.True);
+            Assert.That(simulation.IsDirty, Is.True);
+        }
     }
 }

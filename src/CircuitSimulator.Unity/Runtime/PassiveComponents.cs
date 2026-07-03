@@ -292,4 +292,14 @@ namespace CircuitSimulator.Unity
             }
         }
     }
+
+    /// <summary>A readable two-terminal ideal jumper wire.</summary>
+    [DisallowMultipleComponent]
+    public sealed class Jumper : TwoTerminalCircuitComponent
+    {
+        internal override TwoTerminalComponentHandle AddTo(CircuitBuilder builder, string coreName)
+        {
+            return builder.AddJumper(coreName);
+        }
+    }
 }

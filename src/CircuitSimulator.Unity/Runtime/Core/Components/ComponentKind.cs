@@ -50,7 +50,12 @@ internal enum ComponentKind
     /// <summary>
     /// A controllable ideal two-terminal switch.
     /// </summary>
-    Switch
+    Switch,
+
+    /// <summary>
+    /// A two-terminal ideal jumper wire with a readable branch current.
+    /// </summary>
+    Jumper
 }
 
 }

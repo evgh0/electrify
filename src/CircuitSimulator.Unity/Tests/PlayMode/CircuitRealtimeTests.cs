@@ -243,5 +243,32 @@ namespace CircuitSimulator.Unity.Tests
             Object.Destroy(root);
             yield return null;
         }
+
+        [UnityTest]
+        public IEnumerator JumperInSeriesReportsBranchCurrent()
+        {
+            var root = new GameObject("Jumper Circuit");
+            var simulation = root.AddComponent<CircuitSimulation>();
+            simulation.AutomaticStepping = false;
+            simulation.TimeStep = 1e-3;
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var jumper = simulation.AddJumper("J1");
+            var load = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.Connect(source.Positive, jumper.Positive);
+            simulation.Connect(jumper.Negative, load.Positive);
+
+            Assert.That(simulation.StartSimulation(), Is.True);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(load.Voltage, Is.EqualTo(5.0).Within(1e-9));
+            Assert.That(load.Current, Is.EqualTo(0.005).Within(1e-12));
+            Assert.That(jumper.Voltage, Is.Zero.Within(1e-9));
+            Assert.That(jumper.Current, Is.EqualTo(0.005).Within(1e-12));
+            Assert.That(jumper.Power, Is.Zero.Within(1e-12));
+
+            Object.Destroy(root);
+            yield return null;
+        }
     }
 }

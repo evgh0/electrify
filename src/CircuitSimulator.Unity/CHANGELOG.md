@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added readable ideal jumper components with zero-voltage MNA stamping and positive-to-negative branch-current readings.
+- Added runtime jumper factories, jumper gizmos, documentation, and Unity test coverage.
+
 ## 1.2.0
 
 - Merged the realtime simulation engine into the Unity package source.

@@ -12,7 +12,7 @@ The package targets Unity 6000.0 or later with the .NET Standard 2.1 API compati
 
 ## Supported Runtime Features
 
-- typed two-terminal resistors, capacitors, inductors, voltage sources, current sources, Shockley diodes, LEDs, ideal switches, and momentary buttons;
+- typed two-terminal resistors, capacitors, inductors, voltage sources, current sources, Shockley diodes, LEDs, ideal switches, momentary buttons, and readable ideal jumpers;
 - constant and sinusoidal independent-source waveforms;
 - terminal/wire authoring with one or more ground markers;
 - frame-driven fixed-step backward-Euler realtime simulation;
@@ -38,17 +38,19 @@ simulation.TimeStep = 1e-3;
 var source = simulation.AddVoltageSource("V1", 5.0);
 var resistor = simulation.AddResistor("R1", 1_000.0);
 var capacitor = simulation.AddCapacitor("C1", 100e-6);
+var jumper = simulation.AddJumper("J1");
 
 simulation.Connect(source.Negative, capacitor.Negative);
 simulation.SetGround(source.Negative);
-simulation.Connect(source.Positive, resistor.Positive);
+simulation.Connect(source.Positive, jumper.Positive);
+simulation.Connect(jumper.Negative, resistor.Positive);
 simulation.Connect(resistor.Negative, capacitor.Positive);
 
 capacitor.ReadingChanged += reading => Debug.Log(reading.Voltage);
 simulation.StartSimulation();
 ```
 
-`CircuitSimulation.Tick(seconds)` advances a fixed-step accumulator and is called automatically from `Update` when automatic stepping is enabled. `Step()` accepts exactly one numerical step, including while paused.
+`CircuitSimulation.Tick(seconds)` advances a fixed-step accumulator and is called automatically from `Update` when automatic stepping is enabled. `Step()` accepts exactly one numerical step, including while paused. Use `CircuitWire` for topology-only ideal connections and `Jumper` when the ideal short itself needs voltage, current, power, or `ReadingChanged` results.
 
 ## Development
 

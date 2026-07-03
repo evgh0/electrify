@@ -28,7 +28,8 @@ internal sealed class MnaAssembler
             [ComponentKind.Inductor] = new InductorMnaStamp(),
             [ComponentKind.Diode] = new DiodeMnaStamp(),
             [ComponentKind.Led] = new LedMnaStamp(),
-            [ComponentKind.Switch] = new SwitchMnaStamp()
+            [ComponentKind.Switch] = new SwitchMnaStamp(),
+            [ComponentKind.Jumper] = new JumperMnaStamp()
         };
     }
 
@@ -279,6 +280,21 @@ internal sealed class MnaAssembler
             }
 
             var nodes = GetNodes(component, context);
+            MnaStamps.StampVoltageSource(builder, nodes.Positive, nodes.Negative, branch, 0.0);
+        }
+    }
+
+    private sealed class JumperMnaStamp : ComponentMnaStamp<JumperParameters>
+    {
+        protected override void StampTransient(
+            CompiledComponent component,
+            JumperParameters parameters,
+            MnaStampContext context,
+            TransientStampContext transientContext,
+            IMnaSystemBuilder builder)
+        {
+            var nodes = GetNodes(component, context);
+            var branch = context.Variables.GetBranchCurrentIndex(component.ComponentId);
             MnaStamps.StampVoltageSource(builder, nodes.Positive, nodes.Negative, branch, 0.0);
         }
     }

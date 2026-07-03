@@ -316,6 +316,45 @@ namespace CircuitSimulator.Unity
             return button;
         }
 
+        /// <summary>Creates and registers a readable ideal jumper.</summary>
+        /// <param name="name">The user-facing component name.</param>
+        /// <returns>The created jumper component.</returns>
+        public Jumper AddJumper(string name)
+        {
+            return CreateComponent<Jumper>(name);
+        }
+
+        /// <summary>
+        /// Creates a readable ideal jumper and wires its positive endpoint to <paramref name="first"/>
+        /// and negative endpoint to <paramref name="second"/>.
+        /// </summary>
+        /// <param name="name">The user-facing component name.</param>
+        /// <param name="first">The terminal connected to the jumper's positive endpoint.</param>
+        /// <param name="second">The terminal connected to the jumper's negative endpoint.</param>
+        /// <returns>The created jumper component.</returns>
+        public Jumper AddJumper(string name, CircuitTerminal first, CircuitTerminal second)
+        {
+            if (first == null)
+            {
+                throw new ArgumentNullException(nameof(first));
+            }
+
+            if (second == null)
+            {
+                throw new ArgumentNullException(nameof(second));
+            }
+
+            if (ReferenceEquals(first, second))
+            {
+                throw new ArgumentException("A jumper requires two different terminals.", nameof(second));
+            }
+
+            var jumper = AddJumper(name);
+            Connect(first, jumper.Positive);
+            Connect(jumper.Negative, second);
+            return jumper;
+        }
+
         /// <summary>Creates and registers a constant voltage source.</summary>
         public VoltageSource AddVoltageSource(string name, double voltage)
         {

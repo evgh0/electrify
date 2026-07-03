@@ -117,6 +117,12 @@ internal sealed class CircuitBuilder
     public TwoTerminalComponentHandle AddSwitch(string name, bool initiallyClosed = false) =>
         AddTwoTerminalComponent(name, new SwitchParameters(initiallyClosed));
 
+    /// <summary>Adds a readable ideal two-terminal jumper wire.</summary>
+    /// <param name="name">The unique component name.</param>
+    /// <returns>A handle containing the component identifier and ordered terminals.</returns>
+    public TwoTerminalComponentHandle AddJumper(string name) =>
+        AddTwoTerminalComponent(name, new JumperParameters());
+
     /// <summary>
     /// Connects two terminals with an ideal wire.
     /// </summary>

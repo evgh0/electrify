@@ -322,5 +322,17 @@ namespace CircuitSimulator.Unity.Editor
                     ? secondContact
                     : Vector3.Lerp(firstContact, secondContact, 0.85f) + Vector3.up * 0.12f);
         }
+
+        [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected | GizmoType.Pickable)]
+        private static void DrawJumper(Jumper jumper, GizmoType gizmoType)
+        {
+            if (jumper == null || jumper.Positive == null || jumper.Negative == null)
+            {
+                return;
+            }
+
+            Gizmos.color = jumper.Simulation == null ? Color.red : new Color(0.25f, 0.9f, 0.85f);
+            Gizmos.DrawLine(jumper.Positive.transform.position, jumper.Negative.transform.position);
+        }
     }
 }

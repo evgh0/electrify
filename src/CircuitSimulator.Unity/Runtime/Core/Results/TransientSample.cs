@@ -96,6 +96,7 @@ internal sealed class TransientSample
                 DiodeParameters diode => DiodeModel.Evaluate(diode, voltage).Current,
                 LedParameters led => DiodeModel.Evaluate(led, voltage).Current,
                 SwitchParameters => GetBranchCurrent(component.ComponentId),
+                JumperParameters => GetBranchCurrent(component.ComponentId),
                 _ => throw new SimulationException(
                     $"Component '{component.Name}' ({component.ComponentId}) has unsupported parameters.")
             };
