@@ -16,17 +16,20 @@ namespace CircuitSimulator.Unity
         public double ResistanceOhms
         {
             get => resistanceOhms;
-            set
-            {
-                ValidatePositiveFinite(value, nameof(value));
-                if (resistanceOhms.Equals(value))
-                {
-                    return;
-                }
+            set => SetResistance(value);
+        }
 
-                resistanceOhms = value;
-                NotifyCircuitChanged();
+        /// <summary>Sets resistance in ohms and schedules a circuit rebuild when it changes.</summary>
+        public void SetResistance(double resistanceOhms)
+        {
+            ValidatePositiveFinite(resistanceOhms, nameof(resistanceOhms));
+            if (this.resistanceOhms.Equals(resistanceOhms))
+            {
+                return;
             }
+
+            this.resistanceOhms = resistanceOhms;
+            NotifyCircuitChanged();
         }
 
         internal override TwoTerminalComponentHandle AddTo(CircuitBuilder builder, string coreName)
@@ -55,17 +58,20 @@ namespace CircuitSimulator.Unity
         public double CapacitanceFarads
         {
             get => capacitanceFarads;
-            set
-            {
-                ValidatePositiveFinite(value, nameof(value), "Capacitance");
-                if (capacitanceFarads.Equals(value))
-                {
-                    return;
-                }
+            set => SetCapacitance(value);
+        }
 
-                capacitanceFarads = value;
-                NotifyCircuitChanged();
+        /// <summary>Sets capacitance in farads and schedules a circuit rebuild when it changes.</summary>
+        public void SetCapacitance(double capacitanceFarads)
+        {
+            ValidatePositiveFinite(capacitanceFarads, nameof(capacitanceFarads), "Capacitance");
+            if (this.capacitanceFarads.Equals(capacitanceFarads))
+            {
+                return;
             }
+
+            this.capacitanceFarads = capacitanceFarads;
+            NotifyCircuitChanged();
         }
 
         internal override TwoTerminalComponentHandle AddTo(CircuitBuilder builder, string coreName)
@@ -94,17 +100,20 @@ namespace CircuitSimulator.Unity
         public double InductanceHenries
         {
             get => inductanceHenries;
-            set
-            {
-                ValidatePositiveFinite(value, nameof(value));
-                if (inductanceHenries.Equals(value))
-                {
-                    return;
-                }
+            set => SetInductance(value);
+        }
 
-                inductanceHenries = value;
-                NotifyCircuitChanged();
+        /// <summary>Sets inductance in henries and schedules a circuit rebuild when it changes.</summary>
+        public void SetInductance(double inductanceHenries)
+        {
+            ValidatePositiveFinite(inductanceHenries, nameof(inductanceHenries));
+            if (this.inductanceHenries.Equals(inductanceHenries))
+            {
+                return;
             }
+
+            this.inductanceHenries = inductanceHenries;
+            NotifyCircuitChanged();
         }
 
         internal override TwoTerminalComponentHandle AddTo(CircuitBuilder builder, string coreName)
@@ -141,21 +150,45 @@ namespace CircuitSimulator.Unity
         public double SaturationCurrent
         {
             get => saturationCurrent;
-            set => SetPositiveFinite(ref saturationCurrent, value, nameof(value));
+            set => SetSaturationCurrent(value);
         }
 
         /// <summary>Gets or sets the emission ideality factor.</summary>
         public double IdealityFactor
         {
             get => idealityFactor;
-            set => SetPositiveFinite(ref idealityFactor, value, nameof(value));
+            set => SetIdealityFactor(value);
         }
 
         /// <summary>Gets or sets thermal voltage in volts.</summary>
         public double ThermalVoltage
         {
             get => thermalVoltage;
-            set => SetPositiveFinite(ref thermalVoltage, value, nameof(value));
+            set => SetThermalVoltage(value);
+        }
+
+        /// <summary>Sets reverse saturation current in amperes and schedules a circuit rebuild when it changes.</summary>
+        public void SetSaturationCurrent(double saturationCurrent)
+        {
+            SetPositiveFinite(ref this.saturationCurrent, saturationCurrent, nameof(saturationCurrent));
+        }
+
+        /// <summary>Sets the emission ideality factor and schedules a circuit rebuild when it changes.</summary>
+        public void SetIdealityFactor(double idealityFactor)
+        {
+            SetPositiveFinite(ref this.idealityFactor, idealityFactor, nameof(idealityFactor));
+        }
+
+        /// <summary>Sets thermal voltage in volts and schedules a circuit rebuild when it changes.</summary>
+        public void SetThermalVoltage(double thermalVoltage)
+        {
+            SetPositiveFinite(ref this.thermalVoltage, thermalVoltage, nameof(thermalVoltage));
+        }
+
+        /// <summary>Sets all diode model values atomically.</summary>
+        public void SetModel(double saturationCurrent, double idealityFactor, double thermalVoltage)
+        {
+            Configure(saturationCurrent, idealityFactor, thermalVoltage);
         }
 
         /// <summary>Configures all diode model values atomically.</summary>
@@ -220,28 +253,62 @@ namespace CircuitSimulator.Unity
         public double NominalForwardVoltage
         {
             get => nominalForwardVoltage;
-            set => SetPositiveFinite(ref nominalForwardVoltage, value, nameof(value));
+            set => SetNominalForwardVoltage(value);
         }
 
         /// <summary>Gets or sets reference forward current in amperes.</summary>
         public double ReferenceCurrent
         {
             get => referenceCurrent;
-            set => SetPositiveFinite(ref referenceCurrent, value, nameof(value));
+            set => SetReferenceCurrent(value);
         }
 
         /// <summary>Gets or sets the LED emission ideality factor.</summary>
         public double IdealityFactor
         {
             get => idealityFactor;
-            set => SetPositiveFinite(ref idealityFactor, value, nameof(value));
+            set => SetIdealityFactor(value);
         }
 
         /// <summary>Gets or sets thermal voltage in volts.</summary>
         public double ThermalVoltage
         {
             get => thermalVoltage;
-            set => SetPositiveFinite(ref thermalVoltage, value, nameof(value));
+            set => SetThermalVoltage(value);
+        }
+
+        /// <summary>Sets nominal forward voltage in volts and schedules a circuit rebuild when it changes.</summary>
+        public void SetNominalForwardVoltage(double nominalForwardVoltage)
+        {
+            SetPositiveFinite(ref this.nominalForwardVoltage, nominalForwardVoltage, nameof(nominalForwardVoltage));
+        }
+
+        /// <summary>Sets reference forward current in amperes and schedules a circuit rebuild when it changes.</summary>
+        public void SetReferenceCurrent(double referenceCurrent)
+        {
+            SetPositiveFinite(ref this.referenceCurrent, referenceCurrent, nameof(referenceCurrent));
+        }
+
+        /// <summary>Sets the LED emission ideality factor and schedules a circuit rebuild when it changes.</summary>
+        public void SetIdealityFactor(double idealityFactor)
+        {
+            SetPositiveFinite(ref this.idealityFactor, idealityFactor, nameof(idealityFactor));
+        }
+
+        /// <summary>Sets thermal voltage in volts and schedules a circuit rebuild when it changes.</summary>
+        public void SetThermalVoltage(double thermalVoltage)
+        {
+            SetPositiveFinite(ref this.thermalVoltage, thermalVoltage, nameof(thermalVoltage));
+        }
+
+        /// <summary>Sets all LED model values atomically.</summary>
+        public void SetModel(
+            double nominalForwardVoltage,
+            double referenceCurrent,
+            double idealityFactor,
+            double thermalVoltage)
+        {
+            Configure(nominalForwardVoltage, referenceCurrent, idealityFactor, thermalVoltage);
         }
 
         /// <summary>Configures all LED model values atomically.</summary>

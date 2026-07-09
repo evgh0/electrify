@@ -119,6 +119,22 @@ namespace CircuitSimulator.Unity
     [DisallowMultipleComponent]
     public sealed class VoltageSource : IndependentSource
     {
+        /// <summary>Sets a constant voltage in volts and schedules a circuit rebuild.</summary>
+        public void SetVoltage(double voltage)
+        {
+            ConfigureConstant(voltage);
+        }
+
+        /// <summary>Sets an offset sinusoidal voltage waveform and schedules a circuit rebuild.</summary>
+        public void SetSinusoidalVoltage(
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            ConfigureSinusoidal(offset, amplitude, frequencyHz, phaseRadians);
+        }
+
         internal override TwoTerminalComponentHandle AddTo(CircuitBuilder builder, string coreName)
         {
             ValidateConfiguration();
@@ -132,6 +148,22 @@ namespace CircuitSimulator.Unity
     [DisallowMultipleComponent]
     public sealed class CurrentSource : IndependentSource
     {
+        /// <summary>Sets a constant current in amperes and schedules a circuit rebuild.</summary>
+        public void SetCurrent(double current)
+        {
+            ConfigureConstant(current);
+        }
+
+        /// <summary>Sets an offset sinusoidal current waveform and schedules a circuit rebuild.</summary>
+        public void SetSinusoidalCurrent(
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            ConfigureSinusoidal(offset, amplitude, frequencyHz, phaseRadians);
+        }
+
         internal override TwoTerminalComponentHandle AddTo(CircuitBuilder builder, string coreName)
         {
             ValidateConfiguration();

@@ -1,6 +1,8 @@
+using System;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace CircuitSimulator.Unity.Tests
 {
@@ -39,6 +41,163 @@ namespace CircuitSimulator.Unity.Tests
             resistor.ResistanceOhms = 2000.0;
 
             Assert.That(simulation.IsDirty, Is.True);
+        }
+
+        [Test]
+        public void ExplicitPassiveSettersUpdateValuesMarkDirtyAndValidateInput()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var resistor = simulation.AddResistor("R1", 1000.0);
+            var capacitor = simulation.AddCapacitor("C1", 1e-6);
+            var inductor = simulation.AddInductor("L1", 1e-3);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, resistor.Negative);
+            simulation.Connect(source.Negative, capacitor.Negative);
+            simulation.Connect(source.Negative, inductor.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            simulation.Connect(source.Positive, capacitor.Positive);
+            simulation.Connect(source.Positive, inductor.Positive);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            Assert.That(simulation.IsDirty, Is.False);
+
+            resistor.SetResistance(2000.0);
+            Assert.That(resistor.ResistanceOhms, Is.EqualTo(2000.0));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            capacitor.SetCapacitance(2e-6);
+            Assert.That(capacitor.CapacitanceFarads, Is.EqualTo(2e-6));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            inductor.SetInductance(2e-3);
+            Assert.That(inductor.InductanceHenries, Is.EqualTo(2e-3));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => resistor.SetResistance(0.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => capacitor.SetCapacitance(double.NaN));
+            Assert.Throws<ArgumentOutOfRangeException>(() => inductor.SetInductance(double.PositiveInfinity));
+        }
+
+        [Test]
+        public void ExplicitSourceSettersUpdateWaveformsMarkDirtyAndValidateInput()
+        {
+            var voltageSource = simulation.AddVoltageSource("V1", 5.0);
+            var currentSource = simulation.AddCurrentSource("I1", 0.001);
+            var load = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(voltageSource.Negative);
+            simulation.Connect(voltageSource.Negative, currentSource.Negative);
+            simulation.Connect(voltageSource.Negative, load.Negative);
+            simulation.Connect(voltageSource.Positive, currentSource.Positive);
+            simulation.Connect(voltageSource.Positive, load.Positive);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            Assert.That(simulation.IsDirty, Is.False);
+
+            voltageSource.SetVoltage(3.3);
+            Assert.That(voltageSource.WaveformMode, Is.EqualTo(SourceWaveformMode.Constant));
+            Assert.That(voltageSource.ConstantValue, Is.EqualTo(3.3));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            voltageSource.SetSinusoidalVoltage(1.0, 2.0, 60.0, 0.25);
+            Assert.That(voltageSource.WaveformMode, Is.EqualTo(SourceWaveformMode.Sinusoidal));
+            Assert.That(voltageSource.Offset, Is.EqualTo(1.0));
+            Assert.That(voltageSource.Amplitude, Is.EqualTo(2.0));
+            Assert.That(voltageSource.FrequencyHz, Is.EqualTo(60.0));
+            Assert.That(voltageSource.PhaseRadians, Is.EqualTo(0.25));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            currentSource.SetCurrent(0.002);
+            Assert.That(currentSource.WaveformMode, Is.EqualTo(SourceWaveformMode.Constant));
+            Assert.That(currentSource.ConstantValue, Is.EqualTo(0.002));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            currentSource.SetSinusoidalCurrent(0.001, 0.002, 120.0, 0.5);
+            Assert.That(currentSource.WaveformMode, Is.EqualTo(SourceWaveformMode.Sinusoidal));
+            Assert.That(currentSource.Offset, Is.EqualTo(0.001));
+            Assert.That(currentSource.Amplitude, Is.EqualTo(0.002));
+            Assert.That(currentSource.FrequencyHz, Is.EqualTo(120.0));
+            Assert.That(currentSource.PhaseRadians, Is.EqualTo(0.5));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => voltageSource.SetVoltage(double.NaN));
+            Assert.Throws<ArgumentOutOfRangeException>(() => voltageSource.SetSinusoidalVoltage(0.0, 1.0, 0.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => currentSource.SetCurrent(double.PositiveInfinity));
+            Assert.Throws<ArgumentOutOfRangeException>(() => currentSource.SetSinusoidalCurrent(0.0, 1.0, -1.0));
+        }
+
+        [Test]
+        public void ExplicitDiodeAndLedSettersUpdateValuesMarkDirtyAndValidateInput()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var diode = simulation.AddDiode("D1");
+            var led = simulation.AddLed("LED1");
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, diode.Negative);
+            simulation.Connect(source.Negative, led.Negative);
+            simulation.Connect(source.Positive, diode.Positive);
+            simulation.Connect(source.Positive, led.Positive);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            Assert.That(simulation.IsDirty, Is.False);
+
+            diode.SetSaturationCurrent(2e-12);
+            Assert.That(diode.SaturationCurrent, Is.EqualTo(2e-12));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            diode.SetIdealityFactor(1.5);
+            Assert.That(diode.IdealityFactor, Is.EqualTo(1.5));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            diode.SetThermalVoltage(0.026);
+            Assert.That(diode.ThermalVoltage, Is.EqualTo(0.026));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            diode.SetModel(3e-12, 1.8, 0.027);
+            Assert.That(diode.SaturationCurrent, Is.EqualTo(3e-12));
+            Assert.That(diode.IdealityFactor, Is.EqualTo(1.8));
+            Assert.That(diode.ThermalVoltage, Is.EqualTo(0.027));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            led.SetNominalForwardVoltage(2.1);
+            Assert.That(led.NominalForwardVoltage, Is.EqualTo(2.1));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            led.SetReferenceCurrent(0.015);
+            Assert.That(led.ReferenceCurrent, Is.EqualTo(0.015));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            led.SetIdealityFactor(2.2);
+            Assert.That(led.IdealityFactor, Is.EqualTo(2.2));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            led.SetThermalVoltage(0.026);
+            Assert.That(led.ThermalVoltage, Is.EqualTo(0.026));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            led.SetModel(2.2, 0.012, 2.4, 0.027);
+            Assert.That(led.NominalForwardVoltage, Is.EqualTo(2.2));
+            Assert.That(led.ReferenceCurrent, Is.EqualTo(0.012));
+            Assert.That(led.IdealityFactor, Is.EqualTo(2.4));
+            Assert.That(led.ThermalVoltage, Is.EqualTo(0.027));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => diode.SetSaturationCurrent(0.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => diode.SetModel(1e-12, double.NaN, 0.026));
+            Assert.Throws<ArgumentOutOfRangeException>(() => led.SetNominalForwardVoltage(0.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => led.SetModel(2.0, 0.02, 2.0, double.PositiveInfinity));
         }
 
         [Test]
@@ -115,7 +274,7 @@ namespace CircuitSimulator.Unity.Tests
             Assert.That(simulation.Rebuild(), Is.True);
             Assert.That(circuitSwitch.IsClosed, Is.False);
 
-            circuitSwitch.Close();
+            circuitSwitch.SetClosed(true);
 
             Assert.That(circuitSwitch.IsClosed, Is.True);
             Assert.That(simulation.IsDirty, Is.False);
@@ -132,11 +291,32 @@ namespace CircuitSimulator.Unity.Tests
             Assert.That(button.IsElectricallyClosed, Is.True);
 
             button.Release();
-            button.NormallyClosed = true;
+            button.SetNormallyClosed(true);
             Assert.That(button.IsElectricallyClosed, Is.True);
 
             button.Press();
             Assert.That(button.IsElectricallyClosed, Is.False);
+        }
+
+        [Test]
+        public void ButtonNormalStateSetterChangesLiveStateWithoutMarkingTopologyDirty()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var button = simulation.AddButton("PB1");
+            var load = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.Connect(source.Positive, button.Positive);
+            simulation.Connect(button.Negative, load.Positive);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            Assert.That(button.IsElectricallyClosed, Is.False);
+
+            button.SetNormallyClosed(true);
+
+            Assert.That(button.NormallyClosed, Is.True);
+            Assert.That(button.IsElectricallyClosed, Is.True);
+            Assert.That(simulation.IsDirty, Is.False);
         }
 
         [Test]

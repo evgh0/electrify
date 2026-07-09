@@ -35,6 +35,8 @@ Inspector-authored devices register with the nearest enabled `CircuitSimulation`
 
 Runtime parameter, wiring, enable-state, hierarchy, and deletion changes mark the circuit dirty. The next numerical step rebuilds the embedded circuit model, resets simulation time and reactive history, and clears existing readings.
 
+Electrical values can be changed at runtime with explicit setters such as `resistor.SetResistance(2000.0)`, `source.SetVoltage(5.0)`, and `circuitSwitch.SetClosed(true)`. Switch and button contact changes apply live on the next numerical step without resetting the current session.
+
 `CircuitSimulation.AddJumper(name, first, second)` creates a readable ideal jumper and connects its positive endpoint to `first` and negative endpoint to `second`; positive current is reported in that direction. `CircuitSwitch.Open`, `Close`, and `Toggle`, plus `CircuitButton.Press` and `Release`, are live control operations. They apply on the next numerical step without rebuilding or clearing state. Buttons are normally open by default and can be configured as normally closed.
 
 See `Documentation~/getting-started.md` and the Realtime RC sample for the full lifecycle and failure behavior.

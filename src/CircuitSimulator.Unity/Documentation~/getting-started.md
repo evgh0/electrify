@@ -45,6 +45,16 @@ Opening an ideal contact can leave a floating circuit and produce a singular sol
 
 Changing device properties, terminals, wires, ground flags, hierarchy, or enabled state schedules a rebuild before the next step. A rebuild resets time, waveform phase, capacitor/inductor history, accumulated frame time, and readings.
 
+Runtime code can edit electrical properties through explicit setter methods:
+
+```csharp
+resistor.SetResistance(2000.0);
+source.SetVoltage(5.0);
+circuitSwitch.SetClosed(true);
+```
+
+Use `SetCapacitance`, `SetInductance`, `SetCurrent`, `SetSinusoidalVoltage`, `SetSinusoidalCurrent`, and the diode or LED `Set...` model methods for the other editable devices. Switch and button contact setters apply live on the next step without forcing a rebuild when a compiled session is active.
+
 `DeleteComponent` destroys the device GameObject, including jumpers, and every `CircuitConnection` touching its terminals. `DeleteWire` removes one topology-only ideal wire. Editor commands use Unity Undo; runtime deletion uses `Object.Destroy`.
 
 `CircuitConnection` represents static topology such as ideal wires. `Jumper`, controllable switches, and buttons are simulated components so they can expose readings or stateful behavior.

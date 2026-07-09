@@ -57,31 +57,34 @@ namespace CircuitSimulator.Unity
         public bool IsClosed
         {
             get => isClosed;
-            set
-            {
-                if (isClosed == value)
-                {
-                    return;
-                }
-
-                isClosed = value;
-                NotifySwitchStateChanged();
-            }
+            set => SetClosed(value);
         }
 
         /// <inheritdoc />
         public override bool IsElectricallyClosed => isClosed;
 
+        /// <summary>Sets whether the ideal switch is closed.</summary>
+        public void SetClosed(bool isClosed)
+        {
+            if (this.isClosed == isClosed)
+            {
+                return;
+            }
+
+            this.isClosed = isClosed;
+            NotifySwitchStateChanged();
+        }
+
         /// <summary>Closes the ideal contact.</summary>
         public void Close()
         {
-            IsClosed = true;
+            SetClosed(true);
         }
 
         /// <summary>Opens the ideal contact.</summary>
         public void Open()
         {
-            IsClosed = false;
+            SetClosed(false);
         }
 
         /// <summary>Toggles between open and closed.</summary>
@@ -104,16 +107,7 @@ namespace CircuitSimulator.Unity
         public bool NormallyClosed
         {
             get => normallyClosed;
-            set
-            {
-                if (normallyClosed == value)
-                {
-                    return;
-                }
-
-                normallyClosed = value;
-                NotifySwitchStateChanged();
-            }
+            set => SetNormallyClosed(value);
         }
 
         /// <summary>Gets whether the button is currently pressed.</summary>
@@ -121,6 +115,18 @@ namespace CircuitSimulator.Unity
 
         /// <inheritdoc />
         public override bool IsElectricallyClosed => normallyClosed != isPressed;
+
+        /// <summary>Sets whether the unpressed button is electrically closed.</summary>
+        public void SetNormallyClosed(bool normallyClosed)
+        {
+            if (this.normallyClosed == normallyClosed)
+            {
+                return;
+            }
+
+            this.normallyClosed = normallyClosed;
+            NotifySwitchStateChanged();
+        }
 
         /// <summary>Presses the momentary button.</summary>
         public void Press()

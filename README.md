@@ -52,6 +52,8 @@ simulation.StartSimulation();
 
 `CircuitSimulation.Tick(seconds)` advances a fixed-step accumulator and is called automatically from `Update` when automatic stepping is enabled. `Step()` accepts exactly one numerical step, including while paused. Use `CircuitWire` for topology-only ideal connections and `Jumper` when the ideal short itself needs voltage, current, power, or `ReadingChanged` results.
 
+Runtime component values can be edited with explicit setters such as `resistor.SetResistance(2000.0)`, `source.SetVoltage(5.0)`, and `circuitSwitch.SetClosed(true)`.
+
 ## Development
 
 The standalone .NET Core project, offline DC solver, bounded transient solver, DocFX site, and xUnit test project have been removed. Verification is done through Unity EditMode and PlayMode tests for the package.
