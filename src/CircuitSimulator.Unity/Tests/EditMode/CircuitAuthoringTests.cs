@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -407,6 +408,115 @@ namespace CircuitSimulator.Unity.Tests
             Assert.That(firstWire == null, Is.True);
             Assert.That(secondWire == null, Is.True);
             Assert.That(simulation.IsDirty, Is.True);
+        }
+
+        [Test]
+        public void NetlistProvidesDeterministicNodesTextAndUnityMappings()
+        {
+            var source = simulation.AddVoltageSource("Source \"A\"", 5.0);
+            var resistor = simulation.AddResistor("Load", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, resistor.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+
+            var first = simulation.GetNetlist();
+            var second = simulation.GetNetlist();
+
+            Assert.That(first.Nodes[0].Id, Is.EqualTo("N0"));
+            Assert.That(first.Nodes[0].IsGround, Is.True);
+            Assert.That(first.Components.Count, Is.EqualTo(2));
+            Assert.That(first.ToNetlistText(), Is.EqualTo(second.ToNetlistText()));
+            Assert.That(first.ToNetlistText(), Does.Contain("name=\"Source \\\"A\\\"\""));
+            Assert.That(first.ToNetlistText(), Does.Contain("resistance_ohms=1000"));
+
+            var resistorId = first.GetContextId(resistor);
+            Assert.That(first.GetComponent(resistorId), Is.SameAs(resistor));
+            Assert.That(first.GetGameObject(resistorId), Is.SameAs(resistor.gameObject));
+            Assert.That(first.TryGetComponent(resistorId, out var mapped), Is.True);
+            Assert.That(mapped, Is.SameAs(resistor));
+        }
+
+        [Test]
+        public void ContextBuilderCreatesStablePromptAndDefensiveReadingSnapshot()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var resistor = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, resistor.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            Assert.That(simulation.Step(), Is.True);
+
+            var context = new CircuitContextBuilder(simulation).Build();
+            var resistorId = context.Netlist.GetContextId(resistor);
+            var captured = context.Readings[resistorId];
+
+            source.SetVoltage(2.0);
+            Assert.That(simulation.Step(), Is.True);
+
+            Assert.That(captured.Voltage, Is.EqualTo(5.0).Within(1e-9));
+            Assert.That(context.Readings[resistorId].Voltage, Is.EqualTo(5.0).Within(1e-9));
+            Assert.That(context.ToPromptText(), Does.Contain("CIRCUIT CONTEXT"));
+            Assert.That(context.ToPromptText(), Does.Contain("component").Or.Contain("COMPONENT"));
+            Assert.That(context.ToPromptText(), Does.Contain("voltage_v=5"));
+        }
+
+        [Test]
+        public void AnalyzerRecordsCompilationFailureAndRejectsInvalidRules()
+        {
+            var analyzer = root.AddComponent<CircuitAnalyzer>();
+            analyzer.SetSimulation(simulation);
+            var resistor = simulation.AddResistor("R1", 1000.0);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => analyzer.AddThreshold(
+                resistor, CircuitMetric.Voltage, CircuitThresholdDirection.Above, double.NaN, 1.0));
+            Assert.Throws<ArgumentException>(() => analyzer.AddThreshold(
+                resistor, CircuitMetric.Voltage, CircuitThresholdDirection.Above, 1.0, 2.0));
+
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Circuit simulation rebuild failed"));
+            Assert.That(simulation.Rebuild(), Is.False);
+            Assert.That(
+                analyzer.RecentEvents,
+                Has.Some.Matches<CircuitAnalysisEvent>(item => item.Kind == CircuitAnalysisEventKind.SimulationFailure));
+        }
+
+        [Test]
+        public void NetlistClassifiesEverySupportedComponentKind()
+        {
+            var source = simulation.AddVoltageSource("V", 5.0);
+            var resistor = simulation.AddResistor("R", 1000.0);
+            var capacitor = simulation.AddCapacitor("C", 1e-6);
+            var inductor = simulation.AddInductor("L", 1e-3);
+            var diode = simulation.AddDiode("D");
+            var led = simulation.AddLed("LED");
+            var current = simulation.AddCurrentSource("I", 0.001);
+            var circuitSwitch = simulation.AddSwitch("S", true);
+            var jumper = simulation.AddJumper("J");
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            simulation.Connect(resistor.Negative, capacitor.Positive);
+            simulation.Connect(capacitor.Negative, inductor.Positive);
+            simulation.Connect(inductor.Negative, diode.Positive);
+            simulation.Connect(diode.Negative, led.Positive);
+            simulation.Connect(led.Negative, current.Positive);
+            simulation.Connect(current.Negative, circuitSwitch.Positive);
+            simulation.Connect(circuitSwitch.Negative, jumper.Positive);
+            simulation.Connect(jumper.Negative, source.Negative);
+
+            var kinds = new System.Collections.Generic.HashSet<CircuitComponentKind>(
+                simulation.GetNetlist().Components.Select(component => component.Kind));
+
+            Assert.That(kinds, Is.EquivalentTo(new[]
+            {
+                CircuitComponentKind.Resistor,
+                CircuitComponentKind.CurrentSource,
+                CircuitComponentKind.VoltageSource,
+                CircuitComponentKind.Capacitor,
+                CircuitComponentKind.Inductor,
+                CircuitComponentKind.Diode,
+                CircuitComponentKind.Led,
+                CircuitComponentKind.Switch,
+                CircuitComponentKind.Jumper
+            }));
         }
     }
 }

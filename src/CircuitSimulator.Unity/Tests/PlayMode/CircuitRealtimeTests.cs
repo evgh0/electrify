@@ -270,5 +270,79 @@ namespace CircuitSimulator.Unity.Tests
             Object.Destroy(root);
             yield return null;
         }
+
+        [UnityTest]
+        public IEnumerator AnalyzerReportsThresholdTransitionsAndContextMapping()
+        {
+            var root = new GameObject("Analyzed Circuit");
+            var simulation = root.AddComponent<CircuitSimulation>();
+            simulation.AutomaticStepping = false;
+            simulation.TimeStep = 0.25;
+            var analyzer = root.AddComponent<CircuitAnalyzer>();
+            var source = simulation.AddSinusoidalVoltageSource("V1", 0.0, 5.0, 1.0);
+            var load = simulation.AddResistor("Load", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.Connect(source.Positive, load.Positive);
+            analyzer.AddThreshold(load, CircuitMetric.Voltage, CircuitThresholdDirection.Above, 4.0, 1.0);
+            analyzer.AddThreshold(load, CircuitMetric.Voltage, CircuitThresholdDirection.Below, -4.0, -1.0);
+
+            Assert.That(simulation.StartSimulation(), Is.True);
+            analyzer.ClearHistory();
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(simulation.Step(), Is.True);
+
+            Assert.That(analyzer.RecentEvents.Count, Is.EqualTo(2));
+            Assert.That(analyzer.RecentEvents[0].Kind, Is.EqualTo(CircuitAnalysisEventKind.ThresholdEntered));
+            Assert.That(analyzer.RecentEvents[1].Kind, Is.EqualTo(CircuitAnalysisEventKind.ThresholdExited));
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(analyzer.RecentEvents.Count, Is.EqualTo(4));
+            Assert.That(analyzer.RecentEvents[2].Kind, Is.EqualTo(CircuitAnalysisEventKind.ThresholdEntered));
+            Assert.That(analyzer.RecentEvents[3].Kind, Is.EqualTo(CircuitAnalysisEventKind.ThresholdExited));
+
+            var context = new CircuitContextBuilder(simulation)
+                .WithAnalyzer(analyzer)
+                .IncludeRecentEvents(4)
+                .Build();
+            var loadId = context.Netlist.GetContextId(load);
+            Assert.That(context.Events[0].ComponentId, Is.EqualTo(loadId));
+            Assert.That(context.Netlist.GetGameObject(loadId), Is.SameAs(load.gameObject));
+            Assert.That(context.ToPromptText(), Does.Contain("component=" + loadId));
+
+            Object.Destroy(root);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator AnalyzerBoundsControlEventHistory()
+        {
+            var root = new GameObject("Control Events");
+            var simulation = root.AddComponent<CircuitSimulation>();
+            simulation.AutomaticStepping = false;
+            var analyzer = root.AddComponent<CircuitAnalyzer>();
+            analyzer.HistoryCapacity = 2;
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var circuitSwitch = simulation.AddSwitch("S1", false);
+            var load = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.Connect(source.Positive, circuitSwitch.Positive);
+            simulation.Connect(circuitSwitch.Negative, load.Positive);
+            Assert.That(simulation.StartSimulation(), Is.True);
+            analyzer.ClearHistory();
+
+            circuitSwitch.Close();
+            circuitSwitch.Open();
+            circuitSwitch.Close();
+
+            Assert.That(analyzer.RecentEvents.Count, Is.EqualTo(2));
+            Assert.That(analyzer.RecentEvents[0].Kind, Is.EqualTo(CircuitAnalysisEventKind.ControlStateChanged));
+            Assert.That(analyzer.RecentEvents[1].Kind, Is.EqualTo(CircuitAnalysisEventKind.ControlStateChanged));
+            Assert.That(analyzer.RecentEvents[1].Message, Does.Contain("closed"));
+
+            Object.Destroy(root);
+            yield return null;
+        }
     }
 }

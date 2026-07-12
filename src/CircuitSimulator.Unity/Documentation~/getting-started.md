@@ -58,3 +58,25 @@ Use `SetCapacitance`, `SetInductance`, `SetCurrent`, `SetSinusoidalVoltage`, `Se
 `DeleteComponent` destroys the device GameObject, including jumpers, and every `CircuitConnection` touching its terminals. `DeleteWire` removes one topology-only ideal wire. Editor commands use Unity Undo; runtime deletion uses `Object.Destroy`.
 
 `CircuitConnection` represents static topology such as ideal wires. `Jumper`, controllable switches, and buttons are simulated components so they can expose readings or stateful behavior.
+
+## Building context for an LLM
+
+Call `CircuitSimulation.GetNetlist()` for a deterministic structural snapshot. It exposes canonical `N0`/`C0` style IDs, component parameters and polarity, and mappings from every component ID to its `CircuitComponent` and `GameObject`. `N0` is always ground. Component IDs are local to the snapshot and should be repeated in any assistant response that must be resolved back into the Unity world.
+
+Attach a `CircuitAnalyzer` to capture lifecycle, failure, switch/button, and configured electrical threshold transitions. Thresholds operate on signed voltage, current, or power readings and use separate enter/exit values for hysteresis.
+
+```csharp
+var analyzer = gameObject.AddComponent<CircuitAnalyzer>();
+analyzer.SetSimulation(simulation);
+analyzer.AddThreshold(load, CircuitMetric.Current, CircuitThresholdDirection.Above, 0.02, 0.018);
+
+CircuitContextSnapshot context = new CircuitContextBuilder(simulation)
+    .WithAnalyzer(analyzer)
+    .IncludeRecentEvents(16)
+    .Build();
+
+string promptContext = context.ToPromptText();
+GameObject target = context.Netlist.GetGameObject("C1");
+```
+
+`CircuitContextSnapshot` copies readings and recent events at build time, so it remains unchanged while the simulation advances. The canonical formatter uses invariant culture and includes the package polarity convention.

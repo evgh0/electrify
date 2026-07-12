@@ -51,6 +51,12 @@ namespace CircuitSimulator.Unity
         /// <summary>Raised when a rebuild or numerical step fails.</summary>
         public event Action<CircuitSimulationFailure> SimulationFailed;
 
+        /// <summary>Raised after a new immutable circuit has compiled successfully.</summary>
+        public event Action CircuitRebuilt;
+
+        /// <summary>Raised when a switch or button changes its live electrical contact state.</summary>
+        public event Action<CircuitControlStateChange> ControlStateChanged;
+
         /// <summary>Gets or sets the fixed backward-Euler integration step in seconds.</summary>
         public double TimeStep
         {
@@ -104,6 +110,20 @@ namespace CircuitSimulator.Unity
 
         /// <summary>Gets the latest committed simulation time, or zero without a session.</summary>
         public double CurrentTime => session?.CurrentTime ?? 0.0;
+
+        /// <summary>Gets an immutable deterministic netlist of the current circuit.</summary>
+        /// <exception cref="InvalidOperationException">Thrown when the circuit cannot be rebuilt.</exception>
+        public CircuitNetlistSnapshot GetNetlist()
+        {
+            if (!EnsureSession())
+            {
+                throw new InvalidOperationException(
+                    "A netlist cannot be created because the circuit did not compile successfully.",
+                    lastFailure?.Exception);
+            }
+
+            return CircuitNetlistSnapshot.Create(session.CompiledCircuit, componentIds);
+        }
 
         /// <summary>Registers an enabled descendant. Normal Unity lifecycle registration is automatic.</summary>
         public void Register(CircuitElement element)
@@ -246,6 +266,7 @@ namespace CircuitSimulator.Unity
                 validationIssues = MapValidationIssues(build.CompiledCircuit.ValidationReport.Issues);
                 isDirty = false;
                 SetState(wantsToRun ? CircuitSimulationState.Running : CircuitSimulationState.Paused);
+                CircuitRebuilt?.Invoke();
                 return true;
             }
             catch (Exception exception)
@@ -546,6 +567,7 @@ namespace CircuitSimulator.Unity
             }
 
             session.SetSwitchState(componentId, isClosed);
+            ControlStateChanged?.Invoke(new CircuitControlStateChange(component, isClosed, CurrentTime));
             if (state == CircuitSimulationState.Faulted)
             {
                 SetState(wantsToRun ? CircuitSimulationState.Running : CircuitSimulationState.Paused);

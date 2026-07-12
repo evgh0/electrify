@@ -73,4 +73,24 @@ namespace CircuitSimulator.Unity
         /// <summary>Gets structured validation issues, when compilation produced them.</summary>
         public IReadOnlyList<CircuitDiagnostic> ValidationIssues { get; }
     }
+
+    /// <summary>Describes a live ideal-contact state change.</summary>
+    public sealed class CircuitControlStateChange
+    {
+        internal CircuitControlStateChange(ControlledSwitchComponent component, bool isClosed, double time)
+        {
+            Component = component ?? throw new ArgumentNullException(nameof(component));
+            IsClosed = isClosed;
+            Time = time;
+        }
+
+        /// <summary>Gets the switch or button whose electrical contact changed.</summary>
+        public ControlledSwitchComponent Component { get; }
+
+        /// <summary>Gets whether the contact is now electrically closed.</summary>
+        public bool IsClosed { get; }
+
+        /// <summary>Gets simulation time when the change was observed.</summary>
+        public double Time { get; }
+    }
 }
