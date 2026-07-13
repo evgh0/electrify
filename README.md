@@ -18,6 +18,7 @@ The package targets Unity 6000.0 or later with the .NET Standard 2.1 API compati
 - frame-driven fixed-step backward-Euler realtime simulation;
 - live switch and button state changes without recompiling or resetting reactive history;
 - mapped voltage, current, and power readings on Unity components;
+- observation-only voltage and component-current probes that do not alter or restart the circuit;
 - deterministic LLM-oriented netlists and context snapshots that map component IDs back to GameObjects;
 - bounded circuit analysis events for lifecycle, control, and electrical threshold transitions;
 - structured rebuild and simulation diagnostics;
@@ -48,7 +49,12 @@ simulation.Connect(source.Positive, jumper.Positive);
 simulation.Connect(jumper.Negative, resistor.Positive);
 simulation.Connect(resistor.Negative, capacitor.Positive);
 
+var voltageProbe = simulation.AddVoltageProbe("Capacitor voltage", capacitor.Positive, capacitor.Negative);
+var currentProbe = simulation.AddCurrentProbe("Resistor current", resistor);
+
 capacitor.ReadingChanged += reading => Debug.Log(reading.Voltage);
+voltageProbe.ReadingChanged += reading => Debug.Log(reading.Voltage);
+currentProbe.ReadingChanged += reading => Debug.Log(reading.Current);
 simulation.StartSimulation();
 
 var analyzer = gameObject.AddComponent<CircuitAnalyzer>();
@@ -65,6 +71,8 @@ GameObject mentionedObject = context.Netlist.GetGameObject("C1");
 ```
 
 `CircuitSimulation.Tick(seconds)` advances a fixed-step accumulator and is called automatically from `Update` when automatic stepping is enabled. `Step()` accepts exactly one numerical step, including while paused. Use `CircuitWire` for topology-only ideal connections and `Jumper` when the ideal short itself needs voltage, current, power, or `ReadingChanged` results.
+
+`VoltageProbe` observes the signed voltage between any two compiled terminals. `CurrentProbe` mirrors the signed positive-to-negative current already calculated for an existing component. Probes are observation-only: adding, removing, or retargeting one does not rebuild the circuit, reset simulation time, or change reactive history. A missing, disabled, destroyed, or cross-circuit target makes only that probe unavailable. Current through an arbitrary point in an ideal-wire node is not uniquely defined; use a readable `Jumper` when the circuit needs an explicit measurable series branch.
 
 Runtime component values can be edited with explicit setters such as `resistor.SetResistance(2000.0)`, `source.SetVoltage(5.0)`, and `circuitSwitch.SetClosed(true)`.
 

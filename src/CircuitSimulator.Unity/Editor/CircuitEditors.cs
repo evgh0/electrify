@@ -236,6 +236,74 @@ namespace CircuitSimulator.Unity.Editor
         }
     }
 
+    [CustomEditor(typeof(VoltageProbe))]
+    internal sealed class VoltageProbeEditor : UnityEditor.Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            DrawDefaultInspector();
+            var probe = (VoltageProbe)target;
+
+            if (probe.Positive == null || probe.Negative == null)
+            {
+                EditorGUILayout.HelpBox("Assign positive and negative terminals to measure voltage.", MessageType.Warning);
+            }
+            else if (ReferenceEquals(probe.Positive, probe.Negative))
+            {
+                EditorGUILayout.HelpBox("Positive and negative references must be different terminals.", MessageType.Warning);
+            }
+            else if (probe.Simulation == null ||
+                     !ReferenceEquals(probe.Positive.Simulation, probe.Simulation) ||
+                     !ReferenceEquals(probe.Negative.Simulation, probe.Simulation))
+            {
+                EditorGUILayout.HelpBox("Both terminals must belong to this probe's circuit.", MessageType.Warning);
+            }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Latest Reading", EditorStyles.boldLabel);
+            if (probe.HasReading)
+            {
+                EditorGUILayout.LabelField("Voltage", probe.Voltage.ToString("G8") + " V");
+                EditorGUILayout.LabelField("Time", probe.LatestReading.Value.Time.ToString("G8") + " s");
+            }
+            else
+            {
+                EditorGUILayout.LabelField("No available sample");
+            }
+        }
+    }
+
+    [CustomEditor(typeof(CurrentProbe))]
+    internal sealed class CurrentProbeEditor : UnityEditor.Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            DrawDefaultInspector();
+            var probe = (CurrentProbe)target;
+
+            if (probe.Target == null)
+            {
+                EditorGUILayout.HelpBox("Assign a component whose signed current should be observed.", MessageType.Warning);
+            }
+            else if (probe.Simulation == null || !ReferenceEquals(probe.Target.Simulation, probe.Simulation))
+            {
+                EditorGUILayout.HelpBox("The target component must belong to this probe's circuit.", MessageType.Warning);
+            }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Latest Reading", EditorStyles.boldLabel);
+            if (probe.HasReading)
+            {
+                EditorGUILayout.LabelField("Current", probe.Current.ToString("G8") + " A");
+                EditorGUILayout.LabelField("Time", probe.LatestReading.Value.Time.ToString("G8") + " s");
+            }
+            else
+            {
+                EditorGUILayout.LabelField("No available sample");
+            }
+        }
+    }
+
     [CustomEditor(typeof(CircuitWire))]
     internal sealed class CircuitWireEditor : UnityEditor.Editor
     {
@@ -333,6 +401,34 @@ namespace CircuitSimulator.Unity.Editor
 
             Gizmos.color = jumper.Simulation == null ? Color.red : new Color(0.25f, 0.9f, 0.85f);
             Gizmos.DrawLine(jumper.Positive.transform.position, jumper.Negative.transform.position);
+        }
+
+        [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected | GizmoType.Pickable)]
+        private static void DrawVoltageProbe(VoltageProbe probe, GizmoType gizmoType)
+        {
+            if (probe == null || probe.Positive == null || probe.Negative == null)
+            {
+                return;
+            }
+
+            Gizmos.color = probe.Simulation == null
+                ? Color.red
+                : new Color(0.95f, 0.75f, 0.2f);
+            Gizmos.DrawLine(probe.Positive.transform.position, probe.Negative.transform.position);
+        }
+
+        [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected | GizmoType.Pickable)]
+        private static void DrawCurrentProbe(CurrentProbe probe, GizmoType gizmoType)
+        {
+            if (probe == null || probe.Target == null)
+            {
+                return;
+            }
+
+            Gizmos.color = probe.Simulation == null
+                ? Color.red
+                : new Color(0.75f, 0.35f, 0.95f);
+            Gizmos.DrawLine(probe.transform.position, probe.Target.transform.position);
         }
     }
 }

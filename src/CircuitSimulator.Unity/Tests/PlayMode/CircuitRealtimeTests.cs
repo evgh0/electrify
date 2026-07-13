@@ -37,6 +37,52 @@ namespace CircuitSimulator.Unity.Tests
         }
 
         [UnityTest]
+        public IEnumerator ProbesPublishOnlyAcceptedSamplesWithoutChangingRcHistory()
+        {
+            var root = new GameObject("Probed RC Circuit");
+            var simulation = root.AddComponent<CircuitSimulation>();
+            simulation.AutomaticStepping = false;
+            simulation.TimeStep = 1.0;
+            var source = simulation.AddVoltageSource("V1", 1.0);
+            var resistor = simulation.AddResistor("R1", 1.0);
+            var capacitor = simulation.AddCapacitor("C1", 1.0);
+            simulation.Connect(source.Negative, capacitor.Negative);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            simulation.Connect(resistor.Negative, capacitor.Positive);
+            var voltageProbe = simulation.AddVoltageProbe(
+                "Capacitor voltage",
+                capacitor.Positive,
+                capacitor.Negative);
+            var currentProbe = simulation.AddCurrentProbe("Resistor current", resistor);
+            var voltageEvents = 0;
+            var currentEvents = 0;
+            voltageProbe.ReadingChanged += _ => voltageEvents++;
+            currentProbe.ReadingChanged += _ => currentEvents++;
+
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(voltageProbe.Voltage, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(currentProbe.Current, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(voltageProbe.LatestReading.Value.Time, Is.EqualTo(1.0).Within(1e-12));
+            Assert.That(currentProbe.LatestReading.Value.Time, Is.EqualTo(1.0).Within(1e-12));
+            Assert.That(voltageEvents, Is.EqualTo(1));
+            Assert.That(currentEvents, Is.EqualTo(1));
+
+            currentProbe.gameObject.SetActive(false);
+            Assert.That(simulation.IsDirty, Is.False);
+            Assert.That(currentProbe.HasReading, Is.False);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(simulation.CurrentTime, Is.EqualTo(2.0).Within(1e-12));
+            Assert.That(capacitor.Voltage, Is.EqualTo(0.75).Within(1e-9));
+            Assert.That(voltageProbe.Voltage, Is.EqualTo(0.75).Within(1e-9));
+            Assert.That(voltageEvents, Is.EqualTo(2));
+            Assert.That(currentEvents, Is.EqualTo(1));
+
+            Object.Destroy(root);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator ManualRlStepMapsInductorReading()
         {
             var root = new GameObject("RL Circuit");
@@ -224,21 +270,38 @@ namespace CircuitSimulator.Unity.Tests
             simulation.SetGround(groundSwitch.Negative);
             simulation.Connect(source.Positive, resistor.Positive);
             simulation.Connect(resistor.Negative, capacitor.Positive);
+            var voltageProbe = simulation.AddVoltageProbe(
+                "Capacitor voltage",
+                capacitor.Positive,
+                capacitor.Negative);
+            var currentProbe = simulation.AddCurrentProbe("Resistor current", resistor);
+            var probeEvents = 0;
+            voltageProbe.ReadingChanged += _ => probeEvents++;
+            currentProbe.ReadingChanged += _ => probeEvents++;
 
             Assert.That(simulation.StartSimulation(), Is.True);
             Assert.That(simulation.Step(), Is.True);
             Assert.That(capacitor.Voltage, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(voltageProbe.Voltage, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(currentProbe.Current, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(probeEvents, Is.EqualTo(2));
 
             groundSwitch.Open();
             LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Circuit simulation step failed"));
             Assert.That(simulation.Step(), Is.False);
             Assert.That(simulation.CurrentTime, Is.EqualTo(1.0).Within(1e-9));
             Assert.That(capacitor.Voltage, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(voltageProbe.Voltage, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(currentProbe.Current, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(probeEvents, Is.EqualTo(2));
 
             groundSwitch.Close();
             Assert.That(simulation.Step(), Is.True);
             Assert.That(simulation.CurrentTime, Is.EqualTo(2.0).Within(1e-9));
             Assert.That(capacitor.Voltage, Is.EqualTo(0.75).Within(1e-9));
+            Assert.That(voltageProbe.Voltage, Is.EqualTo(0.75).Within(1e-9));
+            Assert.That(currentProbe.Current, Is.EqualTo(0.25).Within(1e-9));
+            Assert.That(probeEvents, Is.EqualTo(4));
 
             Object.Destroy(root);
             yield return null;

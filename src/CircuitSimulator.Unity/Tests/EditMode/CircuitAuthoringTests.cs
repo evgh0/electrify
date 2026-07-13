@@ -378,6 +378,110 @@ namespace CircuitSimulator.Unity.Tests
         }
 
         [Test]
+        public void ProbeFactoriesDoNotDirtySessionOrEnterNetlist()
+        {
+            simulation.TimeStep = 1.0;
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var load = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.Connect(source.Positive, load.Positive);
+
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(simulation.CurrentTime, Is.EqualTo(1.0).Within(1e-12));
+            var originalNetlist = simulation.GetNetlist().ToNetlistText();
+
+            var voltageProbe = simulation.AddVoltageProbe(
+                "Load voltage",
+                load.Positive,
+                load.Negative);
+            var currentProbe = simulation.AddCurrentProbe("Load current", load);
+
+            Assert.That(simulation.IsDirty, Is.False);
+            Assert.That(voltageProbe.HasReading, Is.False);
+            Assert.That(currentProbe.HasReading, Is.False);
+            Assert.That(simulation.GetNetlist().ToNetlistText(), Is.EqualTo(originalNetlist));
+
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(simulation.CurrentTime, Is.EqualTo(2.0).Within(1e-12));
+            Assert.That(voltageProbe.Voltage, Is.EqualTo(5.0).Within(1e-12));
+            Assert.That(currentProbe.Current, Is.EqualTo(0.005).Within(1e-12));
+            Assert.That(simulation.GetNetlist().Components.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void ProbeRetargetingIsLiveAndPreservesSignedConventions()
+        {
+            simulation.TimeStep = 1.0;
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var load = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.Connect(source.Positive, load.Positive);
+            var voltageProbe = simulation.AddVoltageProbe(
+                "Voltage",
+                source.Positive,
+                source.Negative);
+            var currentProbe = simulation.AddCurrentProbe("Current", load);
+
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(voltageProbe.Voltage, Is.EqualTo(5.0).Within(1e-12));
+            Assert.That(currentProbe.Current, Is.EqualTo(0.005).Within(1e-12));
+
+            voltageProbe.SetTerminals(source.Negative, source.Positive);
+            currentProbe.SetTarget(source);
+
+            Assert.That(simulation.IsDirty, Is.False);
+            Assert.That(voltageProbe.HasReading, Is.False);
+            Assert.That(currentProbe.HasReading, Is.False);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(simulation.CurrentTime, Is.EqualTo(2.0).Within(1e-12));
+            Assert.That(voltageProbe.Voltage, Is.EqualTo(-5.0).Within(1e-12));
+            Assert.That(currentProbe.Current, Is.EqualTo(-0.005).Within(1e-12));
+
+            voltageProbe.SetTerminals(load.Positive, source.Positive);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(voltageProbe.Voltage, Is.Zero.Within(1e-12));
+            Assert.Throws<ArgumentException>(() =>
+                voltageProbe.SetTerminals(source.Positive, source.Positive));
+            Assert.Throws<ArgumentNullException>(() => currentProbe.SetTarget(null));
+        }
+
+        [Test]
+        public void CrossCircuitProbeTargetsRemainUnavailableWithoutFaultingCircuit()
+        {
+            simulation.TimeStep = 1.0;
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var load = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.Connect(source.Positive, load.Positive);
+
+            var foreignRoot = new GameObject("Foreign Circuit");
+            try
+            {
+                var foreignSimulation = foreignRoot.AddComponent<CircuitSimulation>();
+                foreignSimulation.AutomaticStepping = false;
+                var foreignComponent = foreignSimulation.AddResistor("Foreign", 1.0);
+                var voltageProbe = simulation.AddVoltageProbe(
+                    "Foreign voltage",
+                    source.Positive,
+                    foreignComponent.Negative);
+                var currentProbe = simulation.AddCurrentProbe("Foreign current", foreignComponent);
+
+                Assert.That(simulation.Step(), Is.True);
+                Assert.That(simulation.State, Is.Not.EqualTo(CircuitSimulationState.Faulted));
+                Assert.That(voltageProbe.HasReading, Is.False);
+                Assert.That(currentProbe.HasReading, Is.False);
+                Assert.That(source.HasReading, Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(foreignRoot);
+            }
+        }
+
+        [Test]
         public void JumperSelfLoopProducesStructuredFailure()
         {
             var jumper = simulation.AddJumper("J1");

@@ -1,6 +1,6 @@
 # Circuit Simulator Unity Helper
 
-`com.evgh.circuit-simulator` is a Unity 6 package that maps scene components to an embedded realtime circuit model and exposes voltage, current, and power readings without exposing MNA data. Use topology-only `CircuitWire` objects for ordinary nets and readable `Jumper` components for ideal shorts whose branch current should be observed.
+`com.evgh.circuit-simulator` is a Unity 6 package that maps scene components to an embedded realtime circuit model and exposes voltage, current, and power readings without exposing MNA data. It also provides observation-only voltage and component-current probes. Use topology-only `CircuitWire` objects for ordinary nets and readable `Jumper` components for ideal shorts whose branch current should be observed.
 
 ## Install
 
@@ -27,7 +27,12 @@ simulation.Connect(source.Positive, jumper.Positive);
 simulation.Connect(jumper.Negative, circuitSwitch.Positive);
 simulation.Connect(circuitSwitch.Negative, resistor.Positive);
 
+var voltageProbe = simulation.AddVoltageProbe("Load voltage", resistor.Positive, resistor.Negative);
+var currentProbe = simulation.AddCurrentProbe("Load current", resistor);
+
 resistor.ReadingChanged += reading => Debug.Log(reading.Power);
+voltageProbe.ReadingChanged += reading => Debug.Log(reading.Voltage);
+currentProbe.ReadingChanged += reading => Debug.Log(reading.Current);
 simulation.StartSimulation();
 ```
 
@@ -38,6 +43,8 @@ Runtime parameter, wiring, enable-state, hierarchy, and deletion changes mark th
 Electrical values can be changed at runtime with explicit setters such as `resistor.SetResistance(2000.0)`, `source.SetVoltage(5.0)`, and `circuitSwitch.SetClosed(true)`. Switch and button contact changes apply live on the next numerical step without resetting the current session.
 
 `CircuitSimulation.AddJumper(name, first, second)` creates a readable ideal jumper and connects its positive endpoint to `first` and negative endpoint to `second`; positive current is reported in that direction. `CircuitSwitch.Open`, `Close`, and `Toggle`, plus `CircuitButton.Press` and `Release`, are live control operations. They apply on the next numerical step without rebuilding or clearing state. Buttons are normally open by default and can be configured as normally closed.
+
+`CircuitSimulation.AddVoltageProbe(name, positive, negative)` measures `Vpositive - Vnegative` between two existing terminals. `CircuitSimulation.AddCurrentProbe(name, target)` mirrors the target component's established positive-to-negative current. Probe readings and events update after accepted steps, but probes never enter the compiled topology or LLM netlist. Adding, removing, disabling, or retargeting a probe does not dirty or restart the simulation. An unavailable or cross-circuit target clears only that probe's reading. Current at an arbitrary point inside an ideal-wire node is not uniquely defined; insert a readable `Jumper` when an explicit series branch must be measured.
 
 ## LLM circuit context and world mapping
 

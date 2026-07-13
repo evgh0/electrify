@@ -37,6 +37,8 @@ namespace CircuitSimulator.Unity
         private readonly HashSet<CircuitElement> elements = new HashSet<CircuitElement>();
         private readonly Dictionary<CircuitComponent, ComponentId> componentIds =
             new Dictionary<CircuitComponent, ComponentId>();
+        private readonly Dictionary<CircuitTerminal, TerminalId> terminalIds =
+            new Dictionary<CircuitTerminal, TerminalId>();
         private RealtimeSimulationSession session;
         private IReadOnlyList<CircuitDiagnostic> validationIssues = Array.Empty<CircuitDiagnostic>();
         private CircuitSimulationFailure lastFailure;
@@ -125,7 +127,10 @@ namespace CircuitSimulator.Unity
             return CircuitNetlistSnapshot.Create(session.CompiledCircuit, componentIds);
         }
 
-        /// <summary>Registers an enabled descendant. Normal Unity lifecycle registration is automatic.</summary>
+        /// <summary>
+        /// Registers an enabled descendant. Normal Unity lifecycle registration is automatic;
+        /// observation-only probes do not invalidate the compiled circuit.
+        /// </summary>
         public void Register(CircuitElement element)
         {
             if (element == null)
@@ -138,16 +143,16 @@ namespace CircuitSimulator.Unity
                 throw new ArgumentException("Circuit elements must be descendants of their simulation manager.", nameof(element));
             }
 
-            if (elements.Add(element))
+            if (elements.Add(element) && !(element is CircuitProbe))
             {
                 RequestRebuild();
             }
         }
 
-        /// <summary>Unregisters an element and invalidates the compiled circuit.</summary>
+        /// <summary>Unregisters an element and invalidates the compiled circuit unless it is an observation-only probe.</summary>
         public void Unregister(CircuitElement element)
         {
-            if (element != null && elements.Remove(element))
+            if (element != null && elements.Remove(element) && !(element is CircuitProbe))
             {
                 RequestRebuild();
             }
@@ -248,6 +253,7 @@ namespace CircuitSimulator.Unity
             accumulator = 0.0;
             session = null;
             componentIds.Clear();
+            terminalIds.Clear();
             validationIssues = Array.Empty<CircuitDiagnostic>();
             lastFailure = null;
 
@@ -261,6 +267,11 @@ namespace CircuitSimulator.Unity
                 foreach (var pair in build.ComponentIds)
                 {
                     componentIds.Add(pair.Key, pair.Value);
+                }
+
+                foreach (var pair in build.TerminalIds)
+                {
+                    terminalIds.Add(pair.Key, pair.Value);
                 }
 
                 validationIssues = MapValidationIssues(build.CompiledCircuit.ValidationReport.Issues);
@@ -374,6 +385,45 @@ namespace CircuitSimulator.Unity
             Connect(first, jumper.Positive);
             Connect(jumper.Negative, second);
             return jumper;
+        }
+
+        /// <summary>Creates an observation-only voltage probe between two existing terminals.</summary>
+        public VoltageProbe AddVoltageProbe(
+            string name,
+            CircuitTerminal positive,
+            CircuitTerminal negative)
+        {
+            if (positive == null)
+            {
+                throw new ArgumentNullException(nameof(positive));
+            }
+
+            if (negative == null)
+            {
+                throw new ArgumentNullException(nameof(negative));
+            }
+
+            if (ReferenceEquals(positive, negative))
+            {
+                throw new ArgumentException("A voltage probe requires two different terminals.", nameof(negative));
+            }
+
+            var probe = CreateProbe<VoltageProbe>(name);
+            probe.SetTerminals(positive, negative);
+            return probe;
+        }
+
+        /// <summary>Creates an observation-only current probe for an existing component.</summary>
+        public CurrentProbe AddCurrentProbe(string name, CircuitComponent target)
+        {
+            if (target == null)
+            {
+                throw new ArgumentNullException(nameof(target));
+            }
+
+            var probe = CreateProbe<CurrentProbe>(name);
+            probe.SetTarget(target);
+            return probe;
         }
 
         /// <summary>Creates and registers a constant voltage source.</summary>
@@ -537,6 +587,8 @@ namespace CircuitSimulator.Unity
                     }
                 }
 
+                PublishProbes(sample);
+
                 lastFailure = null;
                 SetState(wantsToRun ? CircuitSimulationState.Running : CircuitSimulationState.Paused);
 
@@ -696,7 +748,7 @@ namespace CircuitSimulator.Unity
             }
 
             var compiled = new CircuitCompiler().Compile(builder.Build());
-            return new CircuitBuild(compiled, ids);
+            return new CircuitBuild(compiled, ids, terminals);
         }
 
         private List<T> GetActiveElements<T>() where T : CircuitElement
@@ -745,12 +797,87 @@ namespace CircuitSimulator.Unity
             return component;
         }
 
+        private T CreateProbe<T>(string probeName) where T : CircuitProbe
+        {
+            if (string.IsNullOrWhiteSpace(probeName))
+            {
+                throw new ArgumentException("Probe name cannot be null or whitespace.", nameof(probeName));
+            }
+
+            var probeObject = new GameObject(probeName);
+            probeObject.transform.SetParent(transform, false);
+            return probeObject.AddComponent<T>();
+        }
+
+        private void PublishProbes(TransientSample sample)
+        {
+            var voltageProbes = GetActiveProbes<VoltageProbe>();
+            for (var index = 0; index < voltageProbes.Count; index++)
+            {
+                var probe = voltageProbes[index];
+                TerminalId positiveId;
+                TerminalId negativeId;
+                if (probe.Positive == null || probe.Negative == null ||
+                    !ReferenceEquals(probe.Positive.Simulation, this) ||
+                    !ReferenceEquals(probe.Negative.Simulation, this) ||
+                    !terminalIds.TryGetValue(probe.Positive, out positiveId) ||
+                    !terminalIds.TryGetValue(probe.Negative, out negativeId))
+                {
+                    probe.ClearReading();
+                    continue;
+                }
+
+                probe.Publish(
+                    sample.Time,
+                    sample.GetTerminalVoltage(positiveId) - sample.GetTerminalVoltage(negativeId));
+            }
+
+            var currentProbes = GetActiveProbes<CurrentProbe>();
+            for (var index = 0; index < currentProbes.Count; index++)
+            {
+                var probe = currentProbes[index];
+                ComponentId componentId;
+                if (probe.Target == null ||
+                    !ReferenceEquals(probe.Target.Simulation, this) ||
+                    !componentIds.TryGetValue(probe.Target, out componentId))
+                {
+                    probe.ClearReading();
+                    continue;
+                }
+
+                probe.Publish(sample.Time, sample.GetComponentCurrent(componentId));
+            }
+        }
+
+        private List<T> GetActiveProbes<T>() where T : CircuitProbe
+        {
+            var descendants = GetComponentsInChildren<T>(false);
+            var result = new List<T>(descendants.Length);
+            for (var index = 0; index < descendants.Length; index++)
+            {
+                var probe = descendants[index];
+                if (probe != null && probe.isActiveAndEnabled)
+                {
+                    result.Add(probe);
+                }
+            }
+
+            result.Sort((left, right) => string.CompareOrdinal(GetHierarchyKey(left), GetHierarchyKey(right)));
+            return result;
+        }
+
         private void ClearReadings()
         {
             var components = GetComponentsInChildren<CircuitComponent>(true);
             for (var index = 0; index < components.Length; index++)
             {
                 components[index].ClearReading();
+            }
+
+            var probes = GetComponentsInChildren<CircuitProbe>(true);
+            for (var index = 0; index < probes.Length; index++)
+            {
+                probes[index].ClearReading();
             }
         }
 
@@ -856,15 +983,21 @@ namespace CircuitSimulator.Unity
 
         private sealed class CircuitBuild
         {
-            public CircuitBuild(CompiledCircuit compiledCircuit, Dictionary<CircuitComponent, ComponentId> componentIds)
+            public CircuitBuild(
+                CompiledCircuit compiledCircuit,
+                Dictionary<CircuitComponent, ComponentId> componentIds,
+                Dictionary<CircuitTerminal, TerminalId> terminalIds)
             {
                 CompiledCircuit = compiledCircuit;
                 ComponentIds = componentIds;
+                TerminalIds = terminalIds;
             }
 
             public CompiledCircuit CompiledCircuit { get; }
 
             public Dictionary<CircuitComponent, ComponentId> ComponentIds { get; }
+
+            public Dictionary<CircuitTerminal, TerminalId> TerminalIds { get; }
         }
     }
 }
