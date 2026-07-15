@@ -150,6 +150,25 @@ namespace CircuitSimulator.Unity
             return true;
         }
 
+        /// <summary>Attempts to resolve a context ID to its live Unity scene object.</summary>
+        /// <param name="contextId">The snapshot-local context ID, such as C0.</param>
+        /// <param name="sceneObject">
+        /// Receives the mapped scene object, or <see langword="null"/> when the ID is unknown
+        /// or the mapped Unity object has been destroyed.
+        /// </param>
+        /// <returns><see langword="true"/> when a live mapped scene object was found.</returns>
+        public bool TryGetSceneObject(string contextId, out GameObject sceneObject)
+        {
+            sceneObject = null;
+            if (!TryGetComponent(contextId, out var component) || component == null)
+            {
+                return false;
+            }
+
+            sceneObject = component.gameObject;
+            return sceneObject != null;
+        }
+
         /// <summary>Formats the canonical human- and LLM-readable netlist.</summary>
         public string ToNetlistText()
         {

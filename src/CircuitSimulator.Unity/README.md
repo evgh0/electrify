@@ -90,6 +90,20 @@ if (netlist.TryGetComponent("C2", out CircuitComponent optionalComponent))
 }
 ```
 
+### Translating context components to scene objects
+
+Keep the context snapshot submitted to the assistant and resolve returned `C<n>` IDs against that same snapshot:
+
+```csharp
+if (submittedContext.Netlist.TryGetSceneObject(componentId, out GameObject sceneObject))
+{
+    assistantAvatar.position = sceneObject.transform.position;
+    assistantAvatar.LookAt(sceneObject.transform);
+}
+```
+
+The method returns `false` for a null or unknown ID and when the mapped object has been destroyed. Translate in the opposite direction with `submittedContext.Netlist.GetContextId(sceneObject.GetComponent<CircuitComponent>())`. Context IDs are snapshot-local and can be reassigned by a rebuild; electrical node IDs such as `N0` do not identify individual scene objects.
+
 Use `C<n>` IDs in the LLM exchange rather than display names, because names may be duplicated or changed. IDs are deterministic for the same compiled hierarchy but are not persistent identifiers: rebuilding after hierarchy or topology changes may assign different IDs. The netlist describes structure and configured parameters; it does not run an additional DC operating-point solve.
 
 ### Circuit analysis events

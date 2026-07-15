@@ -625,6 +625,30 @@ namespace CircuitSimulator.Unity.Tests
             Assert.That(first.GetGameObject(resistorId), Is.SameAs(resistor.gameObject));
             Assert.That(first.TryGetComponent(resistorId, out var mapped), Is.True);
             Assert.That(mapped, Is.SameAs(resistor));
+            Assert.That(first.TryGetSceneObject(resistorId, out var sceneObject), Is.True);
+            Assert.That(sceneObject, Is.SameAs(resistor.gameObject));
+            Assert.That(first.TryGetSceneObject("unknown", out sceneObject), Is.False);
+            Assert.That(sceneObject, Is.Null);
+            Assert.That(first.TryGetSceneObject(null, out sceneObject), Is.False);
+            Assert.That(sceneObject, Is.Null);
+        }
+
+        [Test]
+        public void TryGetSceneObjectReturnsFalseAfterMappedObjectIsDestroyed()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var resistor = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, resistor.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+
+            var netlist = simulation.GetNetlist();
+            var resistorId = netlist.GetContextId(resistor);
+
+            Object.DestroyImmediate(resistor.gameObject);
+
+            Assert.That(netlist.TryGetSceneObject(resistorId, out var sceneObject), Is.False);
+            Assert.That(sceneObject, Is.Null);
         }
 
         [Test]

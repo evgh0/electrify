@@ -122,6 +122,27 @@ if (netlist.TryGetComponent("C2", out CircuitComponent optionalComponent))
 
 Use context IDs, rather than display names, in the LLM protocol. Display names can be duplicated or edited. Context IDs are deterministic for the same compiled hierarchy, but a topology or hierarchy rebuild can reassign them; do not store them as persistent save-game identifiers.
 
+### Translating context components to scene objects
+
+Keep the `CircuitContextSnapshot` that was sent to the assistant and ask it to return the exact `C<n>` ID for any component it mentions. Resolve that ID against the same snapshot with `TryGetSceneObject`:
+
+```csharp
+if (submittedContext.Netlist.TryGetSceneObject(componentId, out GameObject sceneObject))
+{
+    assistantAvatar.position = sceneObject.transform.position;
+    assistantAvatar.LookAt(sceneObject.transform);
+}
+```
+
+`TryGetSceneObject` returns `false` and sets `sceneObject` to `null` when the ID is null or unknown, or when the mapped Unity object has been destroyed. To translate in the other direction, get the object's `CircuitComponent` and pass it to `GetContextId`:
+
+```csharp
+CircuitComponent component = sceneObject.GetComponent<CircuitComponent>();
+string componentId = submittedContext.Netlist.GetContextId(component);
+```
+
+The mapping belongs to the snapshot: rebuilding the circuit can reassign `C<n>` IDs. Electrical node IDs such as `N0` describe connectivity and do not map to individual scene objects.
+
 The netlist is structural. It describes topology and configured device values but does not perform an additional DC operating-point solve. Live electrical results come from the latest accepted realtime simulation sample.
 
 ### Recording circuit events
