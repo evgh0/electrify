@@ -63,7 +63,8 @@ namespace CircuitSimulator.Unity
             string positiveNodeId,
             string negativeNodeId,
             IReadOnlyDictionary<string, string> parameters,
-            CircuitComponent component)
+            CircuitComponent component,
+            GameObject sceneObject)
         {
             Id = id;
             DisplayName = displayName;
@@ -73,6 +74,7 @@ namespace CircuitSimulator.Unity
             this.parameters = new ReadOnlyDictionary<string, string>(
                 new Dictionary<string, string>(parameters, StringComparer.Ordinal));
             Component = component;
+            GameObject = sceneObject;
         }
 
         /// <summary>Gets the snapshot-local context ID, such as C0.</summary>
@@ -89,8 +91,10 @@ namespace CircuitSimulator.Unity
         public IReadOnlyDictionary<string, string> Parameters => parameters;
         /// <summary>Gets the mapped Unity circuit component.</summary>
         public CircuitComponent Component { get; }
-        /// <summary>Gets the mapped Unity GameObject.</summary>
-        public GameObject GameObject => Component.gameObject;
+        /// <summary>
+        /// Gets the mapped physical or visual Unity GameObject captured by this snapshot.
+        /// </summary>
+        public GameObject GameObject { get; }
     }
 
     /// <summary>An immutable, Unity-facing structural circuit snapshot.</summary>
@@ -227,7 +231,8 @@ namespace CircuitSimulator.Unity
                     NodeId(positive),
                     NodeId(negative),
                     GetParameters(pair.Key),
-                    pair.Key));
+                    pair.Key,
+                    pair.Key.SceneObject));
                 nodeComponents[positive].Add(id);
                 if (negative != positive)
                 {

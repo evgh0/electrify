@@ -79,4 +79,21 @@ string promptContext = context.ToPromptText();
 GameObject target = context.Netlist.GetGameObject("C1");
 ```
 
+Components created by the runtime factories start at local position zero under the simulation
+manager. Move the component GameObject to its physical world position, or map it to a separate
+visual object before building the context:
+
+```csharp
+resistor.SetSceneObject(resistorVisual);
+
+CircuitContextSnapshot submittedContext = new CircuitContextBuilder(simulation).Build();
+if (submittedContext.Netlist.TryGetSceneObject(componentId, out GameObject target))
+{
+    avatar.WalkToPosition(target.transform.position);
+}
+```
+
+The scene-object mapping is captured by the context snapshot. Keep the snapshot submitted to the
+LLM and resolve the returned component ID against that same snapshot.
+
 `CircuitContextSnapshot` copies readings and recent events at build time, so it remains unchanged while the simulation advances. The canonical formatter uses invariant culture and includes the package polarity convention.

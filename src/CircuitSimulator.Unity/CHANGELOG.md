@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added per-component scene-object mappings so LLM context IDs can resolve to physical or visual avatar targets instead of logical component objects at the simulation origin.
 - Added symmetric square and triangle modes for independent voltage and current sources, including runtime factories, setters, inspector support, netlist parameters, and tests.
 - Added non-invasive voltage and component-current probe behaviours, runtime factories, live readings, inspectors, gizmos, and tests.
 - Added readable ideal jumper components with zero-voltage MNA stamping and positive-to-negative branch-current readings.

@@ -102,7 +102,13 @@ if (submittedContext.Netlist.TryGetSceneObject(componentId, out GameObject scene
 }
 ```
 
-The method returns `false` for a null or unknown ID and when the mapped object has been destroyed. Translate in the opposite direction with `submittedContext.Netlist.GetContextId(sceneObject.GetComponent<CircuitComponent>())`. Context IDs are snapshot-local and can be reassigned by a rebuild; electrical node IDs such as `N0` do not identify individual scene objects.
+Runtime factory components start at local position zero under the simulation manager. Move the component itself, or associate it with a physical/visual object before building the submitted context:
+
+```csharp
+load.SetSceneObject(loadVisual);
+```
+
+The method returns `false` for a null or unknown ID and when the mapped object has been destroyed. The mapping is captured by each snapshot. Translate in the opposite direction with `submittedContext.Netlist.GetContextId(sceneObject.GetComponent<CircuitComponent>())` when the circuit component lives on the same object; otherwise retain the original `CircuitComponent` reference. Context IDs are snapshot-local and can be reassigned by a rebuild; electrical node IDs such as `N0` do not identify individual scene objects.
 
 Use `C<n>` IDs in the LLM exchange rather than display names, because names may be duplicated or changed. IDs are deterministic for the same compiled hierarchy but are not persistent identifiers: rebuilding after hierarchy or topology changes may assign different IDs. The netlist describes structure and configured parameters; it does not run an additional DC operating-point solve.
 

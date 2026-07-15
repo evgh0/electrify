@@ -134,7 +134,13 @@ if (submittedContext.Netlist.TryGetSceneObject(componentId, out GameObject scene
 }
 ```
 
-`TryGetSceneObject` returns `false` and sets `sceneObject` to `null` when the ID is null or unknown, or when the mapped Unity object has been destroyed. To translate in the other direction, get the object's `CircuitComponent` and pass it to `GetContextId`:
+Components created through the runtime factory API start at local position zero beneath the simulation manager. Move the component itself, or associate it with a separate physical/visual object before building the context:
+
+```csharp
+load.SetSceneObject(loadVisual);
+```
+
+`TryGetSceneObject` returns `false` and sets `sceneObject` to `null` when the ID is null or unknown, or when the mapped Unity object has been destroyed. The mapping is captured by each snapshot. To translate in the other direction when the `CircuitComponent` lives on the same object, pass that component to `GetContextId`:
 
 ```csharp
 CircuitComponent component = sceneObject.GetComponent<CircuitComponent>();

@@ -652,6 +652,53 @@ namespace CircuitSimulator.Unity.Tests
         }
 
         [Test]
+        public void NetlistMapsComponentToExplicitSceneObjectAndCapturesItPerSnapshot()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var resistor = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, resistor.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            var firstVisual = new GameObject("First resistor visual");
+            var secondVisual = new GameObject("Second resistor visual");
+            firstVisual.transform.SetParent(root.transform, false);
+            secondVisual.transform.SetParent(root.transform, false);
+
+            resistor.SetSceneObject(firstVisual);
+            var first = simulation.GetNetlist();
+            var resistorId = first.GetContextId(resistor);
+            resistor.SetSceneObject(secondVisual);
+            var second = simulation.GetNetlist();
+
+            Assert.That(first.GetGameObject(resistorId), Is.SameAs(firstVisual));
+            Assert.That(first.TryGetSceneObject(resistorId, out var firstTarget), Is.True);
+            Assert.That(firstTarget, Is.SameAs(firstVisual));
+            Assert.That(second.GetGameObject(resistorId), Is.SameAs(secondVisual));
+
+            resistor.SetSceneObject(null);
+            Assert.That(simulation.GetNetlist().GetGameObject(resistorId), Is.SameAs(resistor.gameObject));
+        }
+
+        [Test]
+        public void TryGetSceneObjectReturnsFalseAfterExplicitSceneObjectIsDestroyed()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var resistor = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, resistor.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            var visual = new GameObject("Resistor visual");
+            resistor.SetSceneObject(visual);
+            var netlist = simulation.GetNetlist();
+            var resistorId = netlist.GetContextId(resistor);
+
+            Object.DestroyImmediate(visual);
+
+            Assert.That(netlist.TryGetSceneObject(resistorId, out var sceneObject), Is.False);
+            Assert.That(sceneObject, Is.Null);
+        }
+
+        [Test]
         public void ContextBuilderCreatesStablePromptAndDefensiveReadingSnapshot()
         {
             var source = simulation.AddVoltageSource("V1", 5.0);

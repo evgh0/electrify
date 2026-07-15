@@ -11,6 +11,9 @@ namespace CircuitSimulator.Unity
         [SerializeField]
         private string displayName;
 
+        [SerializeField]
+        private GameObject sceneObject;
+
         private CircuitReading? latestReading;
 
         /// <summary>Raised after every accepted numerical step.</summary>
@@ -31,6 +34,21 @@ namespace CircuitSimulator.Unity
                 displayName = normalized;
                 NotifyCircuitChanged();
             }
+        }
+
+        /// <summary>
+        /// Gets the scene object used when this component is resolved from an LLM context.
+        /// Falls back to the component's own GameObject when no separate object is assigned.
+        /// </summary>
+        public GameObject SceneObject => ReferenceEquals(sceneObject, null) ? gameObject : sceneObject;
+
+        /// <summary>
+        /// Assigns the physical or visual scene object that an avatar should locate for this component.
+        /// Pass <see langword="null"/> to use the component's own GameObject.
+        /// </summary>
+        public void SetSceneObject(GameObject value)
+        {
+            sceneObject = value;
         }
 
         /// <summary>Gets whether an accepted sample has been mapped since the last rebuild.</summary>
