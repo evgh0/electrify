@@ -676,6 +676,29 @@ namespace CircuitSimulator.Unity.Tests
         }
 
         [Test]
+        public void ContextBuilderCanBuildReturnsFalseForEmptyCircuitWithoutThrowing()
+        {
+            var builder = new CircuitContextBuilder(simulation);
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Circuit simulation rebuild failed"));
+
+            Assert.That(builder.CanBuild(), Is.False);
+        }
+
+        [Test]
+        public void ContextBuilderCanBuildReturnsTrueForValidCircuit()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var resistor = simulation.AddResistor("R1", 1000.0);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, resistor.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            var builder = new CircuitContextBuilder(simulation);
+
+            Assert.That(builder.CanBuild(), Is.True);
+            Assert.DoesNotThrow(() => builder.Build());
+        }
+
+        [Test]
         public void AnalyzerRecordsCompilationFailureAndRejectsInvalidRules()
         {
             var analyzer = root.AddComponent<CircuitAnalyzer>();

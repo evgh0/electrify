@@ -155,6 +155,23 @@ namespace CircuitSimulator.Unity
             return this;
         }
 
+        /// <summary>
+        /// Checks whether the simulation can provide the compiled netlist required to build a context.
+        /// </summary>
+        /// <returns><see langword="true"/> when <see cref="Build"/> can create a context; otherwise, <see langword="false"/>.</returns>
+        public bool CanBuild()
+        {
+            try
+            {
+                simulation.GetNetlist();
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+        }
+
         /// <summary>Builds a new immutable context snapshot.</summary>
         public CircuitContextSnapshot Build()
         {

@@ -189,6 +189,8 @@ string promptContext = context.ToPromptText();
 Debug.Log(promptContext);
 ```
 
+If circuit authoring may still be incomplete, call `CanBuild()` first. It returns `false` instead of throwing when the simulation cannot compile, including for an empty circuit or one without ground. A successful check compiles the netlist if necessary and the following `Build()` reuses it.
+
 Readings are included by default. Pass `false` to `IncludeReadings` for a topology-only prompt. `IncludeRecentEvents(0)` excludes event history. Without `WithAnalyzer`, the context still contains the netlist and optional readings.
 
 `ToPromptText()` uses invariant culture and produces stable sections:

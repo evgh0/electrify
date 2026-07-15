@@ -144,6 +144,8 @@ var context = new CircuitContextBuilder(simulation)
 string promptContext = context.ToPromptText();
 ```
 
+Call `CanBuild()` when circuit authoring may still be incomplete. It returns `false` instead of throwing when the simulation cannot compile (for example, while the circuit is empty or has no ground). A successful check compiles the netlist if needed, so the following `Build()` reuses it.
+
 Readings are included by default. Pass `false` to `IncludeReadings` for topology-only context or `0` to `IncludeRecentEvents` to omit history. The builder works without an analyser when only the netlist and readings are required.
 
 The resulting `CircuitContextSnapshot` defensively copies readings and events. Continuing to simulate does not modify already-submitted context. `ToPromptText()` uses invariant culture and emits deterministic conventions, netlist, readings, and chronological event sections. Tell the LLM to return the exact `C<n>` ID with any component it expects a world avatar to locate.
