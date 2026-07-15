@@ -75,6 +75,54 @@ internal sealed class CircuitBuilder
             new CurrentSourceParameters(
                 new SinusoidalSourceWaveform(offset, amplitude, frequencyHz, phaseRadians)));
 
+    /// <summary>Adds an independent square-wave voltage source.</summary>
+    public TwoTerminalComponentHandle AddSquareVoltageSource(
+        string name,
+        double offset,
+        double amplitude,
+        double frequencyHz,
+        double phaseRadians = 0.0) =>
+        AddTwoTerminalComponent(
+            name,
+            new VoltageSourceParameters(
+                new SquareSourceWaveform(offset, amplitude, frequencyHz, phaseRadians)));
+
+    /// <summary>Adds an independent square-wave current source.</summary>
+    public TwoTerminalComponentHandle AddSquareCurrentSource(
+        string name,
+        double offset,
+        double amplitude,
+        double frequencyHz,
+        double phaseRadians = 0.0) =>
+        AddTwoTerminalComponent(
+            name,
+            new CurrentSourceParameters(
+                new SquareSourceWaveform(offset, amplitude, frequencyHz, phaseRadians)));
+
+    /// <summary>Adds an independent triangle-wave voltage source.</summary>
+    public TwoTerminalComponentHandle AddTriangleVoltageSource(
+        string name,
+        double offset,
+        double amplitude,
+        double frequencyHz,
+        double phaseRadians = 0.0) =>
+        AddTwoTerminalComponent(
+            name,
+            new VoltageSourceParameters(
+                new TriangleSourceWaveform(offset, amplitude, frequencyHz, phaseRadians)));
+
+    /// <summary>Adds an independent triangle-wave current source.</summary>
+    public TwoTerminalComponentHandle AddTriangleCurrentSource(
+        string name,
+        double offset,
+        double amplitude,
+        double frequencyHz,
+        double phaseRadians = 0.0) =>
+        AddTwoTerminalComponent(
+            name,
+            new CurrentSourceParameters(
+                new TriangleSourceWaveform(offset, amplitude, frequencyHz, phaseRadians)));
+
     /// <summary>Adds a two-terminal capacitor.</summary>
     public TwoTerminalComponentHandle AddCapacitor(string name, double capacitance) =>
         AddTwoTerminalComponent(name, new CapacitorParameters(capacitance));

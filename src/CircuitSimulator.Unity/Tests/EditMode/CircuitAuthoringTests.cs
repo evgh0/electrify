@@ -111,6 +111,24 @@ namespace CircuitSimulator.Unity.Tests
             Assert.That(simulation.IsDirty, Is.True);
 
             Assert.That(simulation.Rebuild(), Is.True);
+            voltageSource.SetSquareVoltage(2.0, 3.0, 30.0, 0.75);
+            Assert.That(voltageSource.WaveformMode, Is.EqualTo(SourceWaveformMode.Square));
+            Assert.That(voltageSource.Offset, Is.EqualTo(2.0));
+            Assert.That(voltageSource.Amplitude, Is.EqualTo(3.0));
+            Assert.That(voltageSource.FrequencyHz, Is.EqualTo(30.0));
+            Assert.That(voltageSource.PhaseRadians, Is.EqualTo(0.75));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            voltageSource.SetTriangleVoltage(3.0, 4.0, 15.0, 1.0);
+            Assert.That(voltageSource.WaveformMode, Is.EqualTo(SourceWaveformMode.Triangle));
+            Assert.That(voltageSource.Offset, Is.EqualTo(3.0));
+            Assert.That(voltageSource.Amplitude, Is.EqualTo(4.0));
+            Assert.That(voltageSource.FrequencyHz, Is.EqualTo(15.0));
+            Assert.That(voltageSource.PhaseRadians, Is.EqualTo(1.0));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
             currentSource.SetCurrent(0.002);
             Assert.That(currentSource.WaveformMode, Is.EqualTo(SourceWaveformMode.Constant));
             Assert.That(currentSource.ConstantValue, Is.EqualTo(0.002));
@@ -125,10 +143,53 @@ namespace CircuitSimulator.Unity.Tests
             Assert.That(currentSource.PhaseRadians, Is.EqualTo(0.5));
             Assert.That(simulation.IsDirty, Is.True);
 
+            Assert.That(simulation.Rebuild(), Is.True);
+            currentSource.SetSquareCurrent(0.003, 0.004, 90.0, 1.25);
+            Assert.That(currentSource.WaveformMode, Is.EqualTo(SourceWaveformMode.Square));
+            Assert.That(currentSource.Offset, Is.EqualTo(0.003));
+            Assert.That(currentSource.Amplitude, Is.EqualTo(0.004));
+            Assert.That(currentSource.FrequencyHz, Is.EqualTo(90.0));
+            Assert.That(currentSource.PhaseRadians, Is.EqualTo(1.25));
+            Assert.That(simulation.IsDirty, Is.True);
+
+            Assert.That(simulation.Rebuild(), Is.True);
+            currentSource.SetTriangleCurrent(0.005, 0.006, 45.0, 1.5);
+            Assert.That(currentSource.WaveformMode, Is.EqualTo(SourceWaveformMode.Triangle));
+            Assert.That(currentSource.Offset, Is.EqualTo(0.005));
+            Assert.That(currentSource.Amplitude, Is.EqualTo(0.006));
+            Assert.That(currentSource.FrequencyHz, Is.EqualTo(45.0));
+            Assert.That(currentSource.PhaseRadians, Is.EqualTo(1.5));
+            Assert.That(simulation.IsDirty, Is.True);
+
             Assert.Throws<ArgumentOutOfRangeException>(() => voltageSource.SetVoltage(double.NaN));
             Assert.Throws<ArgumentOutOfRangeException>(() => voltageSource.SetSinusoidalVoltage(0.0, 1.0, 0.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => voltageSource.SetSquareVoltage(0.0, 1.0, -1.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => voltageSource.SetTriangleVoltage(0.0, 1.0, 1.0, double.NaN));
             Assert.Throws<ArgumentOutOfRangeException>(() => currentSource.SetCurrent(double.PositiveInfinity));
             Assert.Throws<ArgumentOutOfRangeException>(() => currentSource.SetSinusoidalCurrent(0.0, 1.0, -1.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => currentSource.SetSquareCurrent(0.0, double.NaN, 1.0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => currentSource.SetTriangleCurrent(0.0, 1.0, 0.0));
+
+            Assert.That(simulation.GetNetlist().ToNetlistText(), Does.Contain("waveform=Triangle"));
+            Assert.That(simulation.GetNetlist().ToNetlistText(), Does.Contain("phase_radians=1.5"));
+        }
+
+        [Test]
+        public void SquareAndTriangleFactoriesConfigureVoltageAndCurrentSources()
+        {
+            var squareVoltage = simulation.AddSquareVoltageSource("Square V", 1.0, 2.0, 3.0, 0.25);
+            var triangleVoltage = simulation.AddTriangleVoltageSource("Triangle V", 4.0, 5.0, 6.0, 0.5);
+            var squareCurrent = simulation.AddSquareCurrentSource("Square I", 7.0, 8.0, 9.0, 0.75);
+            var triangleCurrent = simulation.AddTriangleCurrentSource("Triangle I", 10.0, 11.0, 12.0, 1.0);
+
+            Assert.That(squareVoltage.WaveformMode, Is.EqualTo(SourceWaveformMode.Square));
+            Assert.That(squareVoltage.Offset, Is.EqualTo(1.0));
+            Assert.That(triangleVoltage.WaveformMode, Is.EqualTo(SourceWaveformMode.Triangle));
+            Assert.That(triangleVoltage.Amplitude, Is.EqualTo(5.0));
+            Assert.That(squareCurrent.WaveformMode, Is.EqualTo(SourceWaveformMode.Square));
+            Assert.That(squareCurrent.FrequencyHz, Is.EqualTo(9.0));
+            Assert.That(triangleCurrent.WaveformMode, Is.EqualTo(SourceWaveformMode.Triangle));
+            Assert.That(triangleCurrent.PhaseRadians, Is.EqualTo(1.0));
         }
 
         [Test]
@@ -235,6 +296,32 @@ namespace CircuitSimulator.Unity.Tests
         public void SinusoidalVoltageSourceSelfLoopProducesStructuredFailure()
         {
             var source = simulation.AddSinusoidalVoltageSource("V1", 0.0, 5.0, 1.0);
+            simulation.Connect(source.Positive, source.Negative);
+            simulation.SetGround(source.Negative);
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Circuit simulation rebuild failed"));
+
+            Assert.That(simulation.Rebuild(), Is.False);
+            Assert.That(simulation.State, Is.EqualTo(CircuitSimulationState.Faulted));
+            Assert.That(
+                simulation.ValidationIssues,
+                Has.Some.Matches<CircuitDiagnostic>(
+                    issue => issue.Code == "VOLTAGE_SOURCE_SELF_LOOP_NONZERO"));
+        }
+
+        [TestCase(SourceWaveformMode.Square)]
+        [TestCase(SourceWaveformMode.Triangle)]
+        public void NewPeriodicVoltageSourceSelfLoopProducesStructuredFailure(SourceWaveformMode mode)
+        {
+            var source = simulation.AddVoltageSource("V1", 0.0);
+            if (mode == SourceWaveformMode.Square)
+            {
+                source.SetSquareVoltage(0.0, 5.0, 1.0);
+            }
+            else
+            {
+                source.SetTriangleVoltage(0.0, 5.0, 1.0);
+            }
+
             simulation.Connect(source.Positive, source.Negative);
             simulation.SetGround(source.Negative);
             LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Circuit simulation rebuild failed"));

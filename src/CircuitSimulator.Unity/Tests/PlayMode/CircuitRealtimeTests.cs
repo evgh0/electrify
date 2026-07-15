@@ -130,6 +130,56 @@ namespace CircuitSimulator.Unity.Tests
         }
 
         [UnityTest]
+        public IEnumerator SquareVoltageSourceChangesLevelAtHalfCycle()
+        {
+            var root = new GameObject("Square Circuit");
+            var simulation = root.AddComponent<CircuitSimulation>();
+            simulation.AutomaticStepping = false;
+            simulation.TimeStep = 0.25;
+            var source = simulation.AddSquareVoltageSource("V1", 1.0, 2.0, 1.0);
+            var load = simulation.AddResistor("R1", 1.0);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Positive, load.Positive);
+
+            Assert.That(simulation.StartSimulation(), Is.True);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(load.Voltage, Is.EqualTo(3.0).Within(1e-9));
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(load.Voltage, Is.EqualTo(-1.0).Within(1e-9));
+
+            Object.Destroy(root);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator TriangleCurrentSourceTraversesPositiveAndNegativePeaks()
+        {
+            var root = new GameObject("Triangle Circuit");
+            var simulation = root.AddComponent<CircuitSimulation>();
+            simulation.AutomaticStepping = false;
+            simulation.TimeStep = 0.25;
+            var source = simulation.AddTriangleCurrentSource("I1", 0.0, 1.0, 1.0);
+            var load = simulation.AddResistor("R1", 1.0);
+            simulation.Connect(source.Negative, load.Negative);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Positive, load.Positive);
+
+            Assert.That(simulation.StartSimulation(), Is.True);
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(source.Current, Is.EqualTo(1.0).Within(1e-9));
+            Assert.That(load.Voltage, Is.EqualTo(-1.0).Within(1e-9));
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(source.Current, Is.Zero.Within(1e-9));
+            Assert.That(simulation.Step(), Is.True);
+            Assert.That(source.Current, Is.EqualTo(-1.0).Within(1e-9));
+            Assert.That(load.Voltage, Is.EqualTo(1.0).Within(1e-9));
+
+            Object.Destroy(root);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator PauseAndParameterEditResetTheSession()
         {
             var root = new GameObject("Circuit");

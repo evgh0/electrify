@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added symmetric square and triangle modes for independent voltage and current sources, including runtime factories, setters, inspector support, netlist parameters, and tests.
 - Added non-invasive voltage and component-current probe behaviours, runtime factories, live readings, inspectors, gizmos, and tests.
 - Added readable ideal jumper components with zero-voltage MNA stamping and positive-to-negative branch-current readings.
 - Added runtime jumper factories, jumper gizmos, documentation, and Unity test coverage.

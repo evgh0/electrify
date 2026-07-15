@@ -53,7 +53,7 @@ source.SetVoltage(5.0);
 circuitSwitch.SetClosed(true);
 ```
 
-Use `SetCapacitance`, `SetInductance`, `SetCurrent`, `SetSinusoidalVoltage`, `SetSinusoidalCurrent`, and the diode or LED `Set...` model methods for the other editable devices. Switch and button contact setters apply live on the next step without forcing a rebuild when a compiled session is active.
+Use `SetCapacitance`, `SetInductance`, `SetCurrent`, the sinusoidal/square/triangle voltage and current setters, and the diode or LED `Set...` model methods for the other editable devices. Periodic sources share offset, peak amplitude, frequency, and phase-in-radians parameters. Square waves are symmetric with a fixed 50% duty cycle; triangle waves are symmetric and begin at the offset while rising. Switch and button contact setters apply live on the next step without forcing a rebuild when a compiled session is active.
 
 `DeleteComponent` destroys the device GameObject, including jumpers, and every `CircuitConnection` touching its terminals. `DeleteWire` removes one topology-only ideal wire. Editor commands use Unity Undo; runtime deletion uses `Object.Destroy`.
 

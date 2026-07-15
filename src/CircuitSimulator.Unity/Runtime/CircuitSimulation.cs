@@ -447,6 +447,32 @@ namespace CircuitSimulator.Unity
             return source;
         }
 
+        /// <summary>Creates and registers a symmetric square-wave voltage source.</summary>
+        public VoltageSource AddSquareVoltageSource(
+            string name,
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            var source = CreateComponent<VoltageSource>(name);
+            source.ConfigureSquare(offset, amplitude, frequencyHz, phaseRadians);
+            return source;
+        }
+
+        /// <summary>Creates and registers a symmetric triangle-wave voltage source.</summary>
+        public VoltageSource AddTriangleVoltageSource(
+            string name,
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            var source = CreateComponent<VoltageSource>(name);
+            source.ConfigureTriangle(offset, amplitude, frequencyHz, phaseRadians);
+            return source;
+        }
+
         /// <summary>Creates and registers a constant current source.</summary>
         public CurrentSource AddCurrentSource(string name, double current)
         {
@@ -465,6 +491,32 @@ namespace CircuitSimulator.Unity
         {
             var source = CreateComponent<CurrentSource>(name);
             source.ConfigureSinusoidal(offset, amplitude, frequencyHz, phaseRadians);
+            return source;
+        }
+
+        /// <summary>Creates and registers a symmetric square-wave current source.</summary>
+        public CurrentSource AddSquareCurrentSource(
+            string name,
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            var source = CreateComponent<CurrentSource>(name);
+            source.ConfigureSquare(offset, amplitude, frequencyHz, phaseRadians);
+            return source;
+        }
+
+        /// <summary>Creates and registers a symmetric triangle-wave current source.</summary>
+        public CurrentSource AddTriangleCurrentSource(
+            string name,
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            var source = CreateComponent<CurrentSource>(name);
+            source.ConfigureTriangle(offset, amplitude, frequencyHz, phaseRadians);
             return source;
         }
 

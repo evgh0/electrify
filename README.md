@@ -13,7 +13,7 @@ The package targets Unity 6000.0 or later with the .NET Standard 2.1 API compati
 ## Supported Runtime Features
 
 - typed two-terminal resistors, capacitors, inductors, voltage sources, current sources, Shockley diodes, LEDs, ideal switches, momentary buttons, and readable ideal jumpers;
-- constant and sinusoidal independent-source waveforms;
+- constant, sinusoidal, square, and triangle independent-source waveforms;
 - terminal/wire authoring with one or more ground markers;
 - frame-driven fixed-step backward-Euler realtime simulation;
 - live switch and button state changes without recompiling or resetting reactive history;
@@ -75,6 +75,8 @@ GameObject mentionedObject = context.Netlist.GetGameObject("C1");
 `VoltageProbe` observes the signed voltage between any two compiled terminals. `CurrentProbe` mirrors the signed positive-to-negative current already calculated for an existing component. Probes are observation-only: adding, removing, or retargeting one does not rebuild the circuit, reset simulation time, or change reactive history. A missing, disabled, destroyed, or cross-circuit target makes only that probe unavailable. Current through an arbitrary point in an ideal-wire node is not uniquely defined; use a readable `Jumper` when the circuit needs an explicit measurable series branch.
 
 Runtime component values can be edited with explicit setters such as `resistor.SetResistance(2000.0)`, `source.SetVoltage(5.0)`, and `circuitSwitch.SetClosed(true)`.
+
+Periodic voltage and current sources support sinusoidal, symmetric square, and symmetric triangle modes. They share offset, peak amplitude, frequency, and phase-in-radians parameters. Square waves use a fixed 50% duty cycle; at zero phase they begin at `offset + amplitude`. Triangle waves begin at the offset while rising.
 
 ## Building LLM context
 

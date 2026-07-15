@@ -8,9 +8,13 @@ namespace CircuitSimulator.Unity
     public enum SourceWaveformMode
     {
         /// <summary>A time-invariant source value.</summary>
-        Constant,
+        Constant = 0,
         /// <summary>An offset sinusoidal source.</summary>
-        Sinusoidal
+        Sinusoidal = 1,
+        /// <summary>An offset, symmetric square-wave source with a 50-percent duty cycle.</summary>
+        Square = 2,
+        /// <summary>An offset, symmetric triangle-wave source.</summary>
+        Triangle = 3
     }
 
     /// <summary>Shared inspector and runtime configuration for independent sources.</summary>
@@ -41,16 +45,16 @@ namespace CircuitSimulator.Unity
         /// <summary>Gets the constant source value.</summary>
         public double ConstantValue => constantValue;
 
-        /// <summary>Gets the sinusoidal DC offset.</summary>
+        /// <summary>Gets the periodic waveform offset.</summary>
         public double Offset => offset;
 
-        /// <summary>Gets the sinusoidal peak amplitude.</summary>
+        /// <summary>Gets the periodic waveform peak amplitude.</summary>
         public double Amplitude => amplitude;
 
-        /// <summary>Gets sinusoidal frequency in hertz.</summary>
+        /// <summary>Gets the periodic waveform frequency in hertz.</summary>
         public double FrequencyHz => frequencyHz;
 
-        /// <summary>Gets sinusoidal phase in radians.</summary>
+        /// <summary>Gets the periodic waveform phase in radians.</summary>
         public double PhaseRadians => phaseRadians;
 
         /// <summary>Configures a constant source value.</summary>
@@ -69,6 +73,51 @@ namespace CircuitSimulator.Unity
             double newFrequencyHz,
             double newPhaseRadians = 0.0)
         {
+            ConfigurePeriodic(
+                SourceWaveformMode.Sinusoidal,
+                newOffset,
+                newAmplitude,
+                newFrequencyHz,
+                newPhaseRadians);
+        }
+
+        /// <summary>Configures an offset, symmetric square waveform with a 50-percent duty cycle.</summary>
+        public void ConfigureSquare(
+            double newOffset,
+            double newAmplitude,
+            double newFrequencyHz,
+            double newPhaseRadians = 0.0)
+        {
+            ConfigurePeriodic(
+                SourceWaveformMode.Square,
+                newOffset,
+                newAmplitude,
+                newFrequencyHz,
+                newPhaseRadians);
+        }
+
+        /// <summary>Configures an offset, symmetric triangle waveform.</summary>
+        public void ConfigureTriangle(
+            double newOffset,
+            double newAmplitude,
+            double newFrequencyHz,
+            double newPhaseRadians = 0.0)
+        {
+            ConfigurePeriodic(
+                SourceWaveformMode.Triangle,
+                newOffset,
+                newAmplitude,
+                newFrequencyHz,
+                newPhaseRadians);
+        }
+
+        private void ConfigurePeriodic(
+            SourceWaveformMode mode,
+            double newOffset,
+            double newAmplitude,
+            double newFrequencyHz,
+            double newPhaseRadians)
+        {
             ValidateFinite(newOffset, nameof(newOffset));
             ValidateFinite(newAmplitude, nameof(newAmplitude));
             ValidateFinite(newPhaseRadians, nameof(newPhaseRadians));
@@ -80,7 +129,7 @@ namespace CircuitSimulator.Unity
                     "Frequency must be finite and greater than zero.");
             }
 
-            waveformMode = SourceWaveformMode.Sinusoidal;
+            waveformMode = mode;
             offset = newOffset;
             amplitude = newAmplitude;
             frequencyHz = newFrequencyHz;
@@ -95,6 +144,16 @@ namespace CircuitSimulator.Unity
             {
                 ValidateFinite(constantValue, nameof(ConstantValue));
                 return;
+            }
+
+            if (waveformMode != SourceWaveformMode.Sinusoidal &&
+                waveformMode != SourceWaveformMode.Square &&
+                waveformMode != SourceWaveformMode.Triangle)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(WaveformMode),
+                    waveformMode,
+                    "The source waveform mode is not supported.");
             }
 
             ValidateFinite(offset, nameof(Offset));
@@ -135,12 +194,40 @@ namespace CircuitSimulator.Unity
             ConfigureSinusoidal(offset, amplitude, frequencyHz, phaseRadians);
         }
 
+        /// <summary>Sets a symmetric square voltage waveform and schedules a circuit rebuild.</summary>
+        public void SetSquareVoltage(
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            ConfigureSquare(offset, amplitude, frequencyHz, phaseRadians);
+        }
+
+        /// <summary>Sets a symmetric triangle voltage waveform and schedules a circuit rebuild.</summary>
+        public void SetTriangleVoltage(
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            ConfigureTriangle(offset, amplitude, frequencyHz, phaseRadians);
+        }
+
         internal override TwoTerminalComponentHandle AddTo(CircuitBuilder builder, string coreName)
         {
             ValidateConfiguration();
-            return WaveformMode == SourceWaveformMode.Constant
-                ? builder.AddVoltageSource(coreName, ConstantValue)
-                : builder.AddSinusoidalVoltageSource(coreName, Offset, Amplitude, FrequencyHz, PhaseRadians);
+            return WaveformMode switch
+            {
+                SourceWaveformMode.Constant => builder.AddVoltageSource(coreName, ConstantValue),
+                SourceWaveformMode.Sinusoidal => builder.AddSinusoidalVoltageSource(
+                    coreName, Offset, Amplitude, FrequencyHz, PhaseRadians),
+                SourceWaveformMode.Square => builder.AddSquareVoltageSource(
+                    coreName, Offset, Amplitude, FrequencyHz, PhaseRadians),
+                SourceWaveformMode.Triangle => builder.AddTriangleVoltageSource(
+                    coreName, Offset, Amplitude, FrequencyHz, PhaseRadians),
+                _ => throw new ArgumentOutOfRangeException(nameof(WaveformMode), WaveformMode, "The source waveform mode is not supported.")
+            };
         }
     }
 
@@ -164,12 +251,40 @@ namespace CircuitSimulator.Unity
             ConfigureSinusoidal(offset, amplitude, frequencyHz, phaseRadians);
         }
 
+        /// <summary>Sets a symmetric square current waveform and schedules a circuit rebuild.</summary>
+        public void SetSquareCurrent(
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            ConfigureSquare(offset, amplitude, frequencyHz, phaseRadians);
+        }
+
+        /// <summary>Sets a symmetric triangle current waveform and schedules a circuit rebuild.</summary>
+        public void SetTriangleCurrent(
+            double offset,
+            double amplitude,
+            double frequencyHz,
+            double phaseRadians = 0.0)
+        {
+            ConfigureTriangle(offset, amplitude, frequencyHz, phaseRadians);
+        }
+
         internal override TwoTerminalComponentHandle AddTo(CircuitBuilder builder, string coreName)
         {
             ValidateConfiguration();
-            return WaveformMode == SourceWaveformMode.Constant
-                ? builder.AddCurrentSource(coreName, ConstantValue)
-                : builder.AddSinusoidalCurrentSource(coreName, Offset, Amplitude, FrequencyHz, PhaseRadians);
+            return WaveformMode switch
+            {
+                SourceWaveformMode.Constant => builder.AddCurrentSource(coreName, ConstantValue),
+                SourceWaveformMode.Sinusoidal => builder.AddSinusoidalCurrentSource(
+                    coreName, Offset, Amplitude, FrequencyHz, PhaseRadians),
+                SourceWaveformMode.Square => builder.AddSquareCurrentSource(
+                    coreName, Offset, Amplitude, FrequencyHz, PhaseRadians),
+                SourceWaveformMode.Triangle => builder.AddTriangleCurrentSource(
+                    coreName, Offset, Amplitude, FrequencyHz, PhaseRadians),
+                _ => throw new ArgumentOutOfRangeException(nameof(WaveformMode), WaveformMode, "The source waveform mode is not supported.")
+            };
         }
     }
 }
