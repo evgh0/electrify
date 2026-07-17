@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -631,6 +632,117 @@ namespace CircuitSimulator.Unity.Tests
             Assert.That(sceneObject, Is.Null);
             Assert.That(first.TryGetSceneObject(null, out sceneObject), Is.False);
             Assert.That(sceneObject, Is.Null);
+        }
+
+        [Test]
+        public void NetlistTypedEntriesAndInventoryQueriesCaptureComponentConfiguration()
+        {
+            var voltage = simulation.AddVoltageSource("V1", 5.0);
+            var current = simulation.AddSinusoidalCurrentSource("I1", 1.0, 2.0, 3.0, 0.5);
+            var resistor = simulation.AddResistor("R1", 1000.0);
+            var capacitor = simulation.AddCapacitor("C1", 1e-6);
+            var inductor = simulation.AddInductor("L1", 1e-3);
+            var diode = simulation.AddDiode("D1");
+            var led = simulation.AddLed("LED1");
+            var circuitSwitch = simulation.AddSwitch("S1", initiallyClosed: true);
+            var jumper = simulation.AddJumper("J1");
+
+            simulation.SetGround(voltage.Negative);
+            simulation.Connect(voltage.Positive, jumper.Positive);
+            simulation.Connect(jumper.Negative, current.Positive);
+            simulation.Connect(jumper.Negative, resistor.Positive);
+            simulation.Connect(jumper.Negative, capacitor.Positive);
+            simulation.Connect(jumper.Negative, inductor.Positive);
+            simulation.Connect(jumper.Negative, diode.Positive);
+            simulation.Connect(jumper.Negative, led.Positive);
+            simulation.Connect(jumper.Negative, circuitSwitch.Positive);
+            simulation.Connect(voltage.Negative, current.Negative);
+            simulation.Connect(voltage.Negative, resistor.Negative);
+            simulation.Connect(voltage.Negative, capacitor.Negative);
+            simulation.Connect(voltage.Negative, inductor.Negative);
+            simulation.Connect(voltage.Negative, diode.Negative);
+            simulation.Connect(voltage.Negative, led.Negative);
+            simulation.Connect(voltage.Negative, circuitSwitch.Negative);
+
+            var netlist = simulation.GetNetlist();
+
+            Assert.That(netlist.Contains<ResistorNetlistComponent>(), Is.True);
+            Assert.That(netlist.Contains<ResistorNetlistComponent>(entry => entry.ResistanceOhms >= 1000.0), Is.True);
+            Assert.That(netlist.Contains<ResistorNetlistComponent>(entry => entry.ResistanceOhms > 1000.0), Is.False);
+            Assert.That(netlist.Count<CircuitNetlistComponent>(), Is.EqualTo(9));
+            Assert.That(netlist.Count<ResistorNetlistComponent>(), Is.EqualTo(1));
+            Assert.That(netlist.FindAll<CapacitorNetlistComponent>().Single().CapacitanceFarads, Is.EqualTo(1e-6));
+            Assert.That(netlist.FindAll<InductorNetlistComponent>().Single().InductanceHenries, Is.EqualTo(1e-3));
+            Assert.That(netlist.FindAll<DiodeNetlistComponent>().Single().Component, Is.SameAs(diode));
+            Assert.That(netlist.FindAll<LedNetlistComponent>().Single().Component, Is.SameAs(led));
+            Assert.That(netlist.FindAll<VoltageSourceNetlistComponent>().Single().ConstantValue, Is.EqualTo(5.0));
+
+            var currentEntry = netlist.FindAll<CurrentSourceNetlistComponent>().Single();
+            Assert.That(currentEntry.WaveformMode, Is.EqualTo(SourceWaveformMode.Sinusoidal));
+            Assert.That(currentEntry.Offset, Is.EqualTo(1.0));
+            Assert.That(currentEntry.Amplitude, Is.EqualTo(2.0));
+            Assert.That(currentEntry.FrequencyHz, Is.EqualTo(3.0));
+            Assert.That(currentEntry.PhaseRadians, Is.EqualTo(0.5));
+            Assert.That(netlist.FindAll<SwitchNetlistComponent>().Single().IsClosed, Is.True);
+            Assert.That(netlist.FindAll<JumperNetlistComponent>().Single().Component, Is.SameAs(jumper));
+
+            resistor.SetResistance(2000.0);
+
+            Assert.That(netlist.FindAll<ResistorNetlistComponent>().Single().ResistanceOhms, Is.EqualTo(1000.0));
+            Assert.That(
+                simulation.GetNetlist().FindAll<ResistorNetlistComponent>().Single().ResistanceOhms,
+                Is.EqualTo(2000.0));
+        }
+
+        [Test]
+        public void NetlistTopologyQueriesUseCompiledNodesAndValidateInputs()
+        {
+            var source = simulation.AddVoltageSource("V1", 5.0);
+            var resistor = simulation.AddResistor("R1", 1000.0);
+            var capacitor = simulation.AddCapacitor("C1", 1e-6);
+            simulation.SetGround(source.Negative);
+            simulation.Connect(source.Negative, resistor.Negative);
+            simulation.Connect(source.Negative, capacitor.Negative);
+            simulation.Connect(source.Positive, resistor.Positive);
+            simulation.Connect(source.Positive, capacitor.Positive);
+
+            var netlist = simulation.GetNetlist();
+            var resistorNodes = netlist.GetNodes(resistor);
+            var positiveNode = resistorNodes.Single(node => !node.IsGround);
+            var groundNode = resistorNodes.Single(node => node.IsGround);
+
+            Assert.That(netlist.GetNode(positiveNode.Id), Is.SameAs(positiveNode));
+            Assert.That(netlist.TryGetNode(positiveNode.Id, out var found), Is.True);
+            Assert.That(found, Is.SameAs(positiveNode));
+            Assert.That(netlist.TryGetNode("N999", out found), Is.False);
+            Assert.That(found, Is.Null);
+            Assert.That(netlist.GetComponentsOnNode(positiveNode.Id).Select(entry => entry.Component),
+                Is.EqualTo(new CircuitComponent[] { source, resistor, capacitor }));
+            Assert.That(netlist.GetComponentsOnNode(groundNode.Id).Count, Is.EqualTo(3));
+
+            Assert.That(netlist.AreDirectlyConnected(source, resistor), Is.True);
+            Assert.That(netlist.AreDirectlyConnected(resistor, capacitor), Is.True);
+            Assert.That(netlist.AreDirectlyConnected(resistor, resistor), Is.False);
+            Assert.That(netlist.GetDirectNeighbors(resistor).Select(entry => entry.Component),
+                Is.EqualTo(new CircuitComponent[] { source, capacitor }));
+            Assert.That(netlist.IsDirectlyConnectedToGround(resistor), Is.True);
+
+            var foreignRoot = new GameObject("Foreign circuit");
+            try
+            {
+                var foreign = foreignRoot.AddComponent<Resistor>();
+                foreign.EnsureTerminals();
+
+                Assert.Throws<ArgumentNullException>(() => netlist.GetNodes(null));
+                Assert.Throws<KeyNotFoundException>(() => netlist.GetNodes(foreign));
+                Assert.Throws<KeyNotFoundException>(() => netlist.GetNode("N999"));
+                Assert.Throws<ArgumentNullException>(() => netlist.GetNode(null));
+                Assert.Throws<ArgumentNullException>(() => netlist.Contains<ResistorNetlistComponent>(null));
+            }
+            finally
+            {
+                Object.DestroyImmediate(foreignRoot);
+            }
         }
 
         [Test]

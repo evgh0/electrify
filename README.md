@@ -120,6 +120,30 @@ if (netlist.TryGetComponent("C2", out CircuitComponent optionalComponent))
 }
 ```
 
+### Querying topology and captured configuration
+
+Netlist snapshots also provide deterministic structural queries. Typed entries capture configuration when the
+snapshot is built, so predicates do not change when the live Unity component is edited later:
+
+```csharp
+CircuitNetlistSnapshot netlist = simulation.GetNetlist();
+
+bool hasKilohmLoad = netlist.Contains<ResistorNetlistComponent>(
+    resistor => resistor.ResistanceOhms >= 1_000.0);
+bool sourceTouchesLoad = netlist.AreDirectlyConnected(source, resistor);
+bool loadTouchesGround = netlist.IsDirectlyConnectedToGround(resistor);
+
+foreach (CircuitNetlistComponent neighbor in netlist.GetDirectNeighbors(resistor))
+{
+    Debug.Log(neighbor.DisplayName);
+}
+```
+
+Two components are directly connected when they share a compiled electrical node, including a node with other
+incident components. Use `GetNodes(component)`, `GetNode("N0")`, and `GetComponentsOnNode(nodeId)` for node-level
+queries. These methods use `CircuitComponent` references that belong to the same snapshot; obtain a fresh snapshot
+after changing the circuit.
+
 Use context IDs, rather than display names, in the LLM protocol. Display names can be duplicated or edited. Context IDs are deterministic for the same compiled hierarchy, but a topology or hierarchy rebuild can reassign them; do not store them as persistent save-game identifiers.
 
 ### Translating context components to scene objects
